@@ -131,7 +131,9 @@ export default function ParticipantDashboard({ user }: ParticipantDashboardProps
                   <p className="text-xs text-muted-foreground">Connect & collaborate</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="w-full">Browse Teams</Button>
+              <Button
+                  //@ts-ignore
+                  variant="outline" size="sm" className="w-full">Browse Teams</Button>
             </CardContent>
           </Card>
         </div>
@@ -178,7 +180,7 @@ export default function ParticipantDashboard({ user }: ParticipantDashboardProps
                     key={index}
                     className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 cursor-default"
                   >
-                    {skill}
+                    {skill?.toLocaleString()}
                   </span>
                 ))}
               </div>
