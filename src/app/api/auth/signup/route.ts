@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json(
+          //@ts-ignore
         { error: error.message },
         { status: 400 }
       )

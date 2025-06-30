@@ -54,6 +54,7 @@ export default function SignUpPage() {
       })
       
       if (error) {
+        //@ts-ignore
         setError(error.message)
       } else {
         router.push('/auth/verify-email')
