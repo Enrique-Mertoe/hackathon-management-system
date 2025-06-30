@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase} from '@/lib/supabase'
 import { auth } from '@/lib/auth'
 import {supabaseAdmin} from "@/lib/supabase.admin";
+import {supabase} from "@/lib/supabase.server";
 
 // GET /api/hackathons - List hackathons with filtering and pagination
 export async function GET(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     
     const offset = (page - 1) * limit
 
-    let query = supabase
+    let query = (await supabase())
       .from('hackathons')
       .select(`
         *,
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 // POST /api/hackathons - Create new hackathon (organizers only)
 export async function POST(request: NextRequest) {
   try {
-    const user = await auth.getCurrentUser()
+    const user = await auth.getCurrentUser((await supabase()))
     
     if (!user || !auth.hasRole(user, 'ORGANIZER')) {
       return NextResponse.json(

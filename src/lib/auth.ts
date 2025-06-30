@@ -55,26 +55,27 @@ export const auth = {
   },
 
   // Get current session
-  async getSession() {
-    const { data: { session }, error } = await supabase.auth.getSession()
-    return { session, error }
+  async getSession(sb:any = supabase) {
+    const { data: { user }, error } = await sb.auth.getUser()
+    return { user, error }
   },
 
   // Get current user with profile data
-  async getCurrentUser(): Promise<AuthUser | null> {
-    const { session } = await this.getSession()
-    
-    if (!session?.user) return null
+  async getCurrentUser(sb:any = supabase): Promise<AuthUser | null> {
+    const { user } = await this.getSession(sb);
+    if (!user) return null
 
-    const { data: user, error } = await supabase
+    const { data: info, error } = await sb
       .from('users')
       .select('*')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
+
+
 
     if (error) throw error
     
-    return user
+    return info
   },
 
   // Update user profile
