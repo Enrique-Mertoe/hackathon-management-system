@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { auth } from '@/lib/auth'
+import {supabase} from "@/lib/supabase.server";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const  sp  = (await supabase())
     // Verify authentication
-    const user = await auth.getCurrentUser()
+    const user = await auth.getCurrentUser(sp)
     if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -19,7 +20,7 @@ export async function GET(
     const { id } = params
 
     // Fetch hackathon by ID
-    const { data: hackathon, error } = await supabase
+    const { data: hackathon, error } = await sp
       .from('hackathons')
       .select('*')
       .eq('id', id)
@@ -83,9 +84,10 @@ export async function PUT(
 
     const { id } = params
     const body = await request.json()
+    const  sp  = (await supabase())
 
     // First check if hackathon exists and user has permission
-    const { data: existingHackathon, error: fetchError } = await supabase
+    const { data: existingHackathon, error: fetchError } = await sp
       .from('hackathons')
       .select('*')
       .eq('id', id)
@@ -110,7 +112,7 @@ export async function PUT(
     // This would require joining with organizations table
 
     // Update hackathon
-    const { data: updatedHackathon, error: updateError } = await supabase
+    const { data: updatedHackathon, error: updateError } = await sp
       .from('hackathons')
       .update({
         ...body,
@@ -161,9 +163,9 @@ export async function DELETE(
     }
 
     const { id } = params
-
+    const  sp  = (await supabase())
     // First check if hackathon exists
-    const { data: existingHackathon, error: fetchError } = await supabase
+    const { data: existingHackathon, error: fetchError } = await sp
       .from('hackathons')
       .select('*')
       .eq('id', id)
@@ -184,7 +186,7 @@ export async function DELETE(
     }
 
     // Delete hackathon
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await sp
       .from('hackathons')
       .delete()
       .eq('id', id)
