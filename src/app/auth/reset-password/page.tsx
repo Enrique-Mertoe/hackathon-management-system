@@ -88,7 +88,7 @@ function ResetPasswordForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-lg border-0">
         <CardHeader>
           <CardTitle className="text-center">
             {isResetMode ? 'Set New Password' : 'Reset Password'}
@@ -183,7 +183,7 @@ function ResetPasswordForm() {
 function LoadingFallback() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-lg border-0">
         <CardContent className="p-8 text-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading...</p>
