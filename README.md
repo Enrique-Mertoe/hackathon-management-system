@@ -70,40 +70,6 @@ npm run dev
 
 Visit `http://localhost:3000` to see your HackHub instance!
 
-## 🔧 Development
-
-### Project Structure
-```
-src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   ├── auth/              # Authentication pages
-│   ├── dashboard/         # User dashboard
-│   ├── hackathons/        # Hackathon discovery
-│   └── layout.tsx         # Root layout
-├── components/            # Reusable components
-│   ├── ui/               # Basic UI components
-│   └── layout/           # Layout components
-├── lib/                  # Utility functions
-│   ├── auth.ts           # Authentication utilities
-│   └── supabase.ts       # Supabase client
-└── types/                # TypeScript definitions
-    └── database.ts       # Database types
-```
-
-### Key Files
-- `sql.sql` - Complete database schema for Supabase
-- `src/lib/auth.ts` - Authentication logic with role-based permissions
-- `src/lib/supabase.ts` - Supabase client configuration
-- `src/app/globals.css` - Orange theme and custom styling
-
-## 🎨 Theme Customization
-
-The orange theme is defined in `src/app/globals.css`. Key colors:
-- Primary: `#ea580c` (Orange 600)
-- Secondary: `#fed7aa` (Orange 200)
-- Accent: `#ffedd5` (Orange 100)
-
 ## 👥 User Roles
 
 ### Participant
