@@ -10,6 +10,7 @@ import {
     WifiOff,
     Circle
 } from 'lucide-react';
+import OrgStaff from "@/app/dashboard/components/OrgStaff";
 
 // Custom Badge Component
 const CartBadge: React.FC<{ badgeContent: number; children: React.ReactNode }> = ({badgeContent, children}) => (
@@ -89,44 +90,7 @@ const DashStat: React.FC = () => {
                     <div className="flex w-full pb-2 justify-center items-end">
                         {/* Device Status Grid */}
                         <div className="flex justify-center gap-6 items-end w-full">
-                            {/* Connected Devices */}
-                            <div className="flex flex-row">
-                                <div
-                                    className="flex items-center space-x-1 bg-green-50 rounded-sm px-2 border border-green-200">
-                                    <div className="flex items-center gap-1">
-                                        <Wifi className="text-green-600 w-3 h-3"/>
-                                        <Circle className="text-green-500 w-1 h-1 fill-current"/>
-                                    </div>
-                                    <span className="text-green-700 text-xs font-semibold">24</span>
-                                    <span className="text-green-600 text-[9px] font-medium">Online</span>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col">
-                                <div className="relative">
-                                    <Mtk width={48}/>
-                                    <div
-                                        className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
-                                </div>
-                                {/* Total Status Bar */}
-                                <div className="flex items-center gap-2 -mt-1">
-                                    <div className="flex items-center gap-1">
-                                        <div className="w-1.5 h-1.5 bg-slate-400 rounded-full"></div>
-                                        <span className="text-slate-600 text-[10px] font-medium">Total: 27</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Disconnected Devices */}
-                            <div
-                                className="flex items-center space-x-1 bg-red-50 rounded-sm px-2 border border-red-200">
-                                <div className="flex items-center gap-1">
-                                    <WifiOff className="text-red-600 w-3 h-3"/>
-                                    <Circle className="text-red-500 w-1 h-1 fill-current"/>
-                                </div>
-                                <span className="text-red-700 text-xs font-semibold">3</span>
-                                <span className="text-red-600 text-[9px] font-medium">Offline</span>
-                            </div>
+                           <OrgStaff/>
                         </div>
                     </div>
                 </div>
@@ -143,7 +107,7 @@ const DashStat: React.FC = () => {
                                 onClick={handleClick}
                             >
                                 <Plus
-                                    className={`rounded-full text-green-500 border border-green-200 p-2 transition-transform duration-200 ease-in-out ${
+                                    className={`rounded-full text-orange-500 border border-orange-200 p-2 transition-transform duration-200 ease-in-out ${
                                         open ? 'rotate-45' : 'rotate-0'
                                     }`}
                                     size={48}
@@ -225,17 +189,20 @@ const DashStat: React.FC = () => {
                 </div>
             </div>
             <div className="grid grid-cols-2">
-                <div className="">
-
+                <div className="px-4">
+                   <span className="text-gray-700 text-sm font-semibold mb-2 block">
+                        Organisation Users
+                   </span>
+                    {/*<OrgStaff/>*/}
                 </div>
                 <div className="p-3">
                     <div className="grid grid-cols-3 gap-2">
                         {/* Live Events */}
                         <div className="group h-full relative">
                             <div
-                                className="absolute inset-0 bg-gradient-to-br from-green-500/30 to-emerald-500/30 rounded-md blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                className="absolute inset-0 bg-gradient-to-br from-green-500/30 to-emerald-500/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                             <div
-                                className="relative h-full bg-background/90 backdrop-blur border border-green-500/20 rounded-md p-2 px-4 hover:scale-105 transition-all duration-300">
+                                className="relative h-full bg-background/90 backdrop-blur border border-green-500/20 rounded-xl p-2 px-4 hover:scale-105 transition-all duration-300">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                     <span
@@ -248,9 +215,9 @@ const DashStat: React.FC = () => {
                         {/* Total Reach */}
                         <div className="group h-full relative">
                             <div
-                                className="absolute  inset-0 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-md blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                className="absolute  inset-0 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                             <div
-                                className="relative h-full bg-background/90 backdrop-blur border border-blue-500/20 rounded-md p-2 px-4 hover:scale-105 transition-all duration-300">
+                                className="relative h-full bg-background/90 backdrop-blur border border-blue-500/20 rounded-xl p-2 px-4 hover:scale-105 transition-all duration-300">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                     <span
@@ -267,9 +234,9 @@ const DashStat: React.FC = () => {
                             {/* Events Created */}
                             <div className="group relative">
                                 <div
-                                    className="absolute inset-0 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-md blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                    className="absolute inset-0 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                                 <div
-                                    className="relative bg-background/90 px-3 p-1 backdrop-blur border border-purple-500/20 rounded-sm hover:scale-105 transition-all duration-300">
+                                    className="relative bg-background/90 px-3 p-1 backdrop-blur border border-purple-500/20 rounded-xl hover:scale-105 transition-all duration-300">
                                     <div className="flex items-center gap-1 mb-1">
                                         <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                                         <span
@@ -283,9 +250,9 @@ const DashStat: React.FC = () => {
                             {/* Success Rate */}
                             <div className="group relative">
                                 <div
-                                    className="absolute inset-0 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-sm blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                    className="absolute inset-0 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                                 <div
-                                    className="relative bg-background/90 backdrop-blur border border-orange-500/20 rounded-sm p-1 px-3 hover:scale-105 transition-all duration-300">
+                                    className="relative bg-background/90 backdrop-blur border border-orange-500/20 rounded-xl p-1 px-3 hover:scale-105 transition-all duration-300">
                                     <div className="flex items-center justify-between">
                                         <div className="text-3xl font-bold text-foreground mb-1">--</div>
                                         <span
