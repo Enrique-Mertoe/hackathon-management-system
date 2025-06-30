@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
       })
       .select()
       .single()
+    console.log(hackathonData,error)
 
     if (error) {
       return NextResponse.json(
