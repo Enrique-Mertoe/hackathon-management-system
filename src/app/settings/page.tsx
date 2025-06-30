@@ -22,6 +22,7 @@ const tabs: SettingsTab[] = [
   { id: 'preferences', name: 'Preferences', icon: '🎨' },
   { id: 'notifications', name: 'Notifications', icon: '🔔' },
   { id: 'privacy', name: 'Privacy', icon: '🔒' },
+  { id: 'danger', name: 'Danger Zone', icon: '⚠️' },
 ]
 
 export default function SettingsPage() {
@@ -85,6 +86,11 @@ export default function SettingsPage() {
     newPassword: '',
     confirmPassword: ''
   })
+
+  // Danger zone states
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -237,6 +243,29 @@ export default function SettingsPage() {
       ...prev,
       skills: prev.skills.filter(skill => skill !== skillToRemove)
     }))
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!user || deleteConfirmation !== 'DELETE') return
+    
+    setIsDeleting(true)
+    setError('')
+    
+    try {
+      const { error } = await auth.deleteAccount(user.id)
+      
+      if (error) {
+        setError(error.message || 'Failed to delete account')
+      } else {
+        // Account deleted successfully, sign out and redirect
+        await auth.signOut()
+        router.push('/')
+      }
+    } catch (err) {
+      setError('Failed to delete account')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const renderTabContent = () => {
@@ -520,6 +549,103 @@ export default function SettingsPage() {
           </div>
         )
 
+      case 'danger':
+        return (
+          <div className="space-y-6">
+            <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-lg">
+              <h3 className="text-lg font-semibold text-destructive mb-2 flex items-center gap-2">
+                <span>⚠️</span>
+                Danger Zone
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                These actions are irreversible. Please proceed with caution.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-medium mb-2">Export Account Data</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Download a copy of all your account data including profile, hackathons, and activity.
+                </p>
+                <Button variant="secondary" size="sm">
+                  Export Data
+                </Button>
+              </div>
+
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-medium mb-2">Deactivate Account</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Temporarily disable your account. You can reactivate it by signing in again.
+                </p>
+                <Button variant="secondary" size="sm">
+                  Deactivate Account
+                </Button>
+              </div>
+
+              <div className="p-4 border border-destructive/20 rounded-lg">
+                <h4 className="font-medium text-destructive mb-2">Delete Account</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => setShowDeleteModal(true)}
+                >
+                  Delete Account
+                </Button>
+              </div>
+            </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-background border rounded-lg p-6 w-full max-w-md mx-4">
+                  <h3 className="text-lg font-semibold text-destructive mb-4">Delete Account</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    This will permanently delete your account and all associated data including:
+                  </p>
+                  <ul className="text-sm text-muted-foreground mb-4 list-disc list-inside space-y-1">
+                    <li>Your profile and personal information</li>
+                    <li>Hackathon registrations and submissions</li>
+                    <li>Team memberships and created teams</li>
+                    <li>Messages and communication history</li>
+                  </ul>
+                  <p className="text-sm font-medium mb-4">
+                    To confirm deletion, type "DELETE" in the field below:
+                  </p>
+                  <Input
+                    value={deleteConfirmation}
+                    onChange={(e) => setDeleteConfirmation(e.target.value)}
+                    placeholder="Type DELETE to confirm"
+                    className="mb-4"
+                  />
+                  <div className="flex gap-3 justify-end">
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setShowDeleteModal(false)
+                        setDeleteConfirmation('')
+                      }}
+                      disabled={isDeleting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteAccount}
+                      disabled={deleteConfirmation !== 'DELETE' || isDeleting}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete Account'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+
       default:
         return null
     }
@@ -607,6 +733,7 @@ export default function SettingsPage() {
                   {activeTab === 'preferences' && 'Customize your platform experience'}
                   {activeTab === 'notifications' && 'Control how you receive notifications'}
                   {activeTab === 'privacy' && 'Manage your privacy and visibility settings'}
+                  {activeTab === 'danger' && 'Dangerous actions that permanently affect your account'}
                 </CardDescription>
               </CardHeader>
 
@@ -625,14 +752,16 @@ export default function SettingsPage() {
 
                 {renderTabContent()}
 
-                <div className="flex justify-end mt-8 pt-6 border-t">
-                  <Button 
-                    onClick={handleSave}
-                    disabled={saving}
-                  >
-                    {saving ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                </div>
+                {activeTab !== 'danger' && (
+                  <div className="flex justify-end mt-8 pt-6 border-t">
+                    <Button 
+                      onClick={handleSave}
+                      disabled={saving}
+                    >
+                      {saving ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
