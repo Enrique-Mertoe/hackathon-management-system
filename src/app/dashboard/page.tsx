@@ -73,9 +73,6 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Welcome back, {user.full_name}!
           </h1>
-          <p className="text-muted-foreground">
-            {user.role.charAt(0) + user.role.slice(1).toLowerCase()} Dashboard
-          </p>
         </div>
 
         {renderRoleDashboard()}

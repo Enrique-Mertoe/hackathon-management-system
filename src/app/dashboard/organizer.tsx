@@ -4,6 +4,7 @@ import React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { AuthUser } from '@/lib/auth'
+import DashStat from "@/app/dashboard/components/DashStats";
 
 interface OrganizerDashboardProps {
   user: AuthUser
@@ -12,84 +13,16 @@ interface OrganizerDashboardProps {
 export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
   return (
     <div className="space-y-12">
-      {/* Command Center Stats */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-purple-500/5 to-blue-500/10 rounded-3xl"></div>
-        <div className="relative p-8">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/70 rounded-2xl flex items-center justify-center">
-              <span className="text-3xl">🎯</span>
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold text-foreground">Command Center</h2>
-              <p className="text-muted-foreground">Orchestrate incredible experiences</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Live Events */}
-            <div className="group relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/30 to-emerald-500/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-              <div className="relative bg-background/90 backdrop-blur border border-green-500/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-bold text-green-600 uppercase tracking-wider">Live</span>
-                </div>
-                <div className="text-3xl font-bold text-foreground mb-1">0</div>
-                <div className="text-sm text-muted-foreground">Active Events</div>
-              </div>
-            </div>
-
-            {/* Total Reach */}
-            <div className="group relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-              <div className="relative bg-background/90 backdrop-blur border border-blue-500/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Reach</span>
-                </div>
-                <div className="text-3xl font-bold text-foreground mb-1">0</div>
-                <div className="text-sm text-muted-foreground">Total Participants</div>
-              </div>
-            </div>
-
-            {/* Events Created */}
-            <div className="group relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-              <div className="relative bg-background/90 backdrop-blur border border-purple-500/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">Created</span>
-                </div>
-                <div className="text-3xl font-bold text-foreground mb-1">0</div>
-                <div className="text-sm text-muted-foreground">Hackathons</div>
-              </div>
-            </div>
-
-            {/* Success Rate */}
-            <div className="group relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-              <div className="relative bg-background/90 backdrop-blur border border-orange-500/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span className="text-xs font-bold text-orange-600 uppercase tracking-wider">Impact</span>
-                </div>
-                <div className="text-3xl font-bold text-foreground mb-1">--</div>
-                <div className="text-sm text-muted-foreground">Success Rate</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashStat/>
 
       {/* Creator Studio */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 mt-4 xl:grid-cols-3 gap-8">
         {/* Main Creator Action */}
         <div className="xl:col-span-2 group relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent rounded-3xl"></div>
           <div className="absolute top-4 right-4 text-8xl opacity-5 group-hover:opacity-10 transition-all duration-500">🚀</div>
           
-          <Card className="relative border-0 bg-gradient-to-br from-background/95 to-primary/5 backdrop-blur-sm hover:scale-[1.02] transition-all duration-500">
+          <Card className="relative border-0 bg-gradient-to-br from-background/95 to-primary/5  transition-all duration-500">
             <CardContent className="p-10">
               <div className="flex items-start gap-6">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/70 rounded-3xl flex items-center justify-center">

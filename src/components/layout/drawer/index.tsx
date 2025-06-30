@@ -172,16 +172,6 @@ export function Drawer({ isOpen, onClose }: DrawerProps) {
             <span className="sr-only">Close menu</span>
           </button>
         </div>
-
-        {/* User Info*/}
-        {/*{user && (*/}
-        {/*  <div className="mb-6 p-3 bg-muted rounded-lg">*/}
-        {/*    <p className="text-sm font-medium text-foreground">{user.full_name}</p>*/}
-        {/*    <p className="text-xs text-muted-foreground">{user.email}</p>*/}
-        {/*    <p className="text-xs text-primary capitalize">{user.role.toLowerCase()}</p>*/}
-        {/*  </div>*/}
-        {/*)}*/}
-
         {/* Navigation */}
         <nav className="space-y-2">
           {/* Main Navigation */}
