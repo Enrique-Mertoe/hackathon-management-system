@@ -1,0 +1,129 @@
+import { supabase } from './supabase'
+import { Database } from '@/types/database'
+
+type User = Database['public']['Tables']['users']['Row']
+
+export interface AuthUser extends User {}
+
+export const auth = {
+  // Sign up new user
+  async signUp(email: string, password: string, userData: {
+    username: string
+    full_name: string
+    role?: 'PARTICIPANT' | 'ORGANIZER' | 'MENTOR' | 'JUDGE' | 'ADMIN'
+  }) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    })
+
+    if (error) throw error
+
+    if (data.user) {
+      // Create user profile
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: data.user.id,
+          email: data.user.email!,
+          username: userData.username,
+          full_name: userData.full_name,
+          role: userData.role || 'PARTICIPANT',
+          email_verified: false,
+        })
+
+      if (profileError) throw profileError
+    }
+
+    return { data, error }
+  },
+
+  // Sign in user
+  async signIn(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    return { data, error }
+  },
+
+  // Sign out user
+  async signOut() {
+    const { error } = await supabase.auth.signOut()
+    return { error }
+  },
+
+  // Get current session
+  async getSession() {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    return { session, error }
+  },
+
+  // Get current user with profile data
+  async getCurrentUser(): Promise<AuthUser | null> {
+    const { session } = await this.getSession()
+    
+    if (!session?.user) return null
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', session.user.id)
+      .single()
+
+    if (error) throw error
+    
+    return user
+  },
+
+  // Update user profile
+  async updateProfile(userId: string, updates: Partial<User>) {
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single()
+
+    return { data, error }
+  },
+
+  // Reset password
+  async resetPassword(email: string) {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+    })
+
+    return { data, error }
+  },
+
+  // Update password
+  async updatePassword(password: string) {
+    const { data, error } = await supabase.auth.updateUser({
+      password
+    })
+
+    return { data, error }
+  },
+
+  // Check if user has required role
+  hasRole(user: AuthUser | null, requiredRole: User['role']): boolean {
+    if (!user) return false
+    
+    const roleHierarchy = {
+      PARTICIPANT: 1,
+      ORGANIZER: 2,
+      MENTOR: 3,
+      JUDGE: 4,
+      ADMIN: 5,
+    }
+    
+    return roleHierarchy[user.role] >= roleHierarchy[requiredRole]
+  },
+
+  // Check if user can access resource
+  canAccess(user: AuthUser | null, requiredRole: User['role']): boolean {
+    return this.hasRole(user, requiredRole)
+  }
+}
