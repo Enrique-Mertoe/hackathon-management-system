@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,29 @@ export default function SignUpPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [rateLimitCountdown, setRateLimitCountdown] = useState(0)
   const router = useRouter()
+
+  // Handle rate limit countdown
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (rateLimitCountdown > 0) {
+      interval = setInterval(() => {
+        setRateLimitCountdown(prev => {
+          if (prev <= 1) {
+            setError('')
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [rateLimitCountdown])
+
+  const isRateLimited = rateLimitCountdown > 0
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -54,12 +76,21 @@ export default function SignUpPage() {
       })
       
       if (error) {
-        //@ts-ignore
-        setError(error.message)
+        // Handle rate limiting error specifically
+        const errorMessage = (error as any).message || String(error)
+        if (errorMessage.includes('For security purposes, you can only request this after')) {
+          const seconds = errorMessage.match(/after (\d+) seconds/)?.[1]
+          const waitTime = seconds ? parseInt(seconds) : 10
+          setRateLimitCountdown(waitTime)
+          setError(`Too many signup attempts. Please wait ${waitTime} seconds before trying again.`)
+        } else {
+          setError(errorMessage)
+        }
       } else {
         router.push('/auth/verify-email')
       }
     } catch (err) {
+      console.log(err)
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -78,8 +109,17 @@ export default function SignUpPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded text-destructive text-sm">
+              <div className={`p-3 rounded text-sm ${
+                isRateLimited 
+                  ? 'bg-warning/10 border border-warning/20 text-warning' 
+                  : 'bg-destructive/10 border border-destructive/20 text-destructive'
+              }`}>
                 {error}
+                {isRateLimited && (
+                  <div className="mt-2 text-xs">
+                    ⏱️ You can try again in {rateLimitCountdown} seconds
+                  </div>
+                )}
               </div>
             )}
             
@@ -145,9 +185,14 @@ export default function SignUpPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={loading}
+              disabled={loading || isRateLimited}
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading 
+                ? 'Creating account...' 
+                : isRateLimited 
+                  ? `Wait ${rateLimitCountdown}s to try again`
+                  : 'Create Account'
+              }
             </Button>
           </form>
           

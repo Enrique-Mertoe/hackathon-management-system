@@ -2,10 +2,15 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { auth } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
+
+// Import role-specific dashboard components
+import ParticipantDashboard from './participant'
+import OrganizerDashboard from './organizer'
+import MentorDashboard from './mentor'
+import AdminDashboard from './admin'
+import JudgeDashboard from './judge'
 
 export default function DashboardPage() {
   const [user, setUser] = useState<AuthUser | null>(null)
@@ -44,180 +49,20 @@ export default function DashboardPage() {
     return null
   }
 
-  const getRoleActions = () => {
+  const renderRoleDashboard = () => {
     switch (user.role) {
-      case 'ORGANIZER':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Hackathon</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Organize a new hackathon and manage participants
-                </p>
-                <Button className="w-full">Create New</Button>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>My Hackathons</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  View and manage your organized hackathons
-                </p>
-                <Button variant="secondary" className="w-full">View All</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Track participation and engagement metrics
-                </p>
-                <Button variant="ghost" className="w-full">View Analytics</Button>
-              </CardContent>
-            </Card>
-          </div>
-        )
-      
       case 'PARTICIPANT':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Discover Hackathons</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Find hackathons that match your interests and skills
-                </p>
-                <Button className="w-full">Explore</Button>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>My Registrations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  View hackathons you've registered for
-                </p>
-                <Button variant="secondary" className="w-full">View All</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Find Teams</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Connect with other participants and form teams
-                </p>
-                <Button variant="ghost" className="w-full">Browse Teams</Button>
-              </CardContent>
-            </Card>
-          </div>
-        )
-        
+        return <ParticipantDashboard user={user} />
+      case 'ORGANIZER':
+        return <OrganizerDashboard user={user} />
       case 'MENTOR':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Hackathons</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  View hackathons where you can mentor participants
-                </p>
-                <Button className="w-full">Browse</Button>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>My Mentoring</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Manage teams and participants you're mentoring
-                </p>
-                <Button variant="secondary" className="w-full">View All</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Resources</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Access mentoring resources and guidelines
-                </p>
-                <Button variant="ghost" className="w-full">View Resources</Button>
-              </CardContent>
-            </Card>
-          </div>
-        )
-        
+        return <MentorDashboard user={user} />
       case 'ADMIN':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Platform Analytics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  View comprehensive platform statistics
-                </p>
-                <Button className="w-full">View Analytics</Button>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Manage users and organization verification
-                </p>
-                <Button variant="secondary" className="w-full">Manage Users</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Content Moderation</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Review and moderate platform content
-                </p>
-                <Button variant="ghost" className="w-full">Moderate</Button>
-              </CardContent>
-            </Card>
-          </div>
-        )
-        
+        return <AdminDashboard user={user} />
+      case 'JUDGE':
+        return <JudgeDashboard user={user} />
       default:
-        return (
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-muted-foreground">Welcome to HackHub! Your dashboard will be customized based on your role.</p>
-            </CardContent>
-          </Card>
-        )
+        return <ParticipantDashboard user={user} />
     }
   }
 
@@ -233,68 +78,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Profile Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                {user.email_verified ? 'Verified' : 'Pending'}
-              </div>
-              <p className="text-muted-foreground text-sm">
-                Email verification status
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Role</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
-              </div>
-              <p className="text-muted-foreground text-sm">
-                Your current role
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Member Since</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                {new Date(user.created_at).toLocaleDateString()}
-              </div>
-              <p className="text-muted-foreground text-sm">
-                Account creation date
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Skills</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                {Array.isArray(user.skills) ? user.skills.length : 0}
-              </div>
-              <p className="text-muted-foreground text-sm">
-                Skills listed
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-6">Quick Actions</h2>
-          {getRoleActions()}
-        </div>
+        {renderRoleDashboard()}
       </div>
     </div>
   )
