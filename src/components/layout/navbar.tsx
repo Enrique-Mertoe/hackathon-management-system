@@ -59,9 +59,14 @@ export const Navbar: React.FC = () => {
                 </Link>
               )}
               {user && (
-                <Link href="/dashboard" className="text-foreground hover:text-primary transition-colors">
-                  Dashboard
-                </Link>
+                <>
+                  <Link href="/dashboard" className="text-foreground hover:text-primary transition-colors">
+                    Dashboard
+                  </Link>
+                  <Link href="/settings" className="text-foreground hover:text-primary transition-colors">
+                    Settings
+                  </Link>
+                </>
               )}
             </div>
           </div>
