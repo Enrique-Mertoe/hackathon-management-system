@@ -4,8 +4,9 @@ import {supabase} from "@/lib/supabase.server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: any
 ) {
+
   try {
     const  sp  = (await supabase())
     // Verify authentication
@@ -17,7 +18,7 @@ export async function GET(
       )
     }
 
-    const { id } = params
+    const { id } = await  params
 
     // Fetch hackathon by ID
     const { data: hackathon, error } = await sp
@@ -62,7 +63,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: any
 ) {
   try {
     // Verify authentication
@@ -82,7 +83,7 @@ export async function PUT(
       )
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const  sp  = (await supabase())
 
@@ -142,7 +143,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: any
 ) {
   try {
     // Verify authentication
@@ -162,7 +163,7 @@ export async function DELETE(
       )
     }
 
-    const { id } = params
+    const { id } = await params
     const  sp  = (await supabase())
     // First check if hackathon exists
     const { data: existingHackathon, error: fetchError } = await sp
