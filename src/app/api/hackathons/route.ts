@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabase} from '@/lib/supabase'
 import { auth } from '@/lib/auth'
+import {supabaseAdmin} from "@/lib/supabase.admin";
 
 // GET /api/hackathons - List hackathons with filtering and pagination
 export async function GET(request: NextRequest) {
