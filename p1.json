@@ -1,6 +1,6 @@
 {
   "name": "hackathon-management-system",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -14,6 +14,8 @@
     "next": "15.3.4",
     "@supabase/supabase-js": "^2.39.0",
     "@supabase/auth-helpers-nextjs": "^0.8.7",
+    "lucide-react": "^0.263.1",
+    "@headlessui/react": "^1.7.17",
     "clsx": "^2.0.0",
     "tailwind-merge": "^2.2.0",
     "zod": "^3.22.4",
