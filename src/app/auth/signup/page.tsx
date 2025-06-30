@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { auth } from '@/lib/auth'
 
@@ -109,19 +110,16 @@ export default function SignUpPage() {
               required
             />
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Type</label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="PARTICIPANT">Participant</option>
-                <option value="ORGANIZER">Organizer</option>
-                <option value="MENTOR">Mentor</option>
-              </select>
-            </div>
+            <Select
+              label="Account Type"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+            >
+              <option value="PARTICIPANT">Participant</option>
+              <option value="ORGANIZER">Organizer</option>
+              <option value="MENTOR">Mentor</option>
+            </Select>
             
             <Input
               label="Password"
