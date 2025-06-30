@@ -271,8 +271,9 @@ export default function OrganizeHackathonPage() {
                           {criterion.replace('_', ' ')}
                         </span>
                         <span className="text-muted-foreground">{
-                          //@ts-ignore
-                          weight}%</span>
+
+                          weight ? weight :''
+                        }%</span>
                       </div>
                     ))}
                   </div>
