@@ -131,7 +131,7 @@ export default function OrganizePage() {
               </p>
             </div>
             <div className="mt-4 sm:mt-0">
-              <Link href="/organize/create">
+              <Link href="/dashboard/organize/create">
                 <Button size="lg">
                   Create New Hackathon
                 </Button>

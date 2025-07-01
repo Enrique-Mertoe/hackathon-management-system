@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({onMenuClick}) => {
                                 Discover
                             </Link>
                             {user && user.role === 'ORGANIZER' && (
-                                <Link href="/organize"
+                                <Link href="/dashboard/organize"
                                       className={`text-foreground hover:text-primary transition-colors ${navLinClass}`}>
                                     Organize
                                 </Link>

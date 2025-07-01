@@ -5,6 +5,7 @@ A comprehensive platform for discovering hackathons, building teams, and advanci
 ## 🚀 Features
 
 - **Role-based Authentication**: Support for Participants, Organizers, Mentors, Judges, and Admins
+- **AI-Powered Copilot**: Smart hackathon planning assistant with form auto-fill capabilities
 - **Hackathon Discovery**: AI-powered recommendations and advanced filtering
 - **Team Formation**: Smart team matching and collaboration tools
 - **Real-time Communication**: Integrated messaging and updates
@@ -13,11 +14,12 @@ A comprehensive platform for discovering hackathons, building teams, and advanci
 
 ## 🛠 Tech Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript, TailwindCSS
+- **Frontend**: Next.js 15, React 19, TypeScript, Material-UI (MUI)
 - **Backend**: Next.js API Routes, Supabase
 - **Database**: PostgreSQL (via Supabase)
 - **Authentication**: Supabase Auth
-- **Styling**: TailwindCSS with custom orange theme
+- **AI Integration**: Google Gemini API
+- **Styling**: Material-UI with custom orange theme
 
 ## 📋 Prerequisites
 
@@ -47,20 +49,22 @@ npm install
 
 ### 4. Configure Environment Variables
 
-Copy `.env.local` and update with your Supabase credentials:
+Copy `.env.example` to `.env.local` and update with your configuration:
 
 ```bash
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/hackhub"
 
-# JWT Secret (generate a strong random string)
-JWT_SECRET=your-jwt-secret-here
+# Authentication
+JWT_SECRET="your-jwt-secret-key-here"
+JWT_REFRESH_SECRET="your-jwt-refresh-secret-key-here"
 
-# App Configuration
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_APP_NAME=HackHub
+# AI Services
+GEMINI_API_KEY="your-gemini-api-key-here"
+
+# Application
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NODE_ENV="development"
 ```
 
 ### 5. Start Development Server
@@ -69,6 +73,13 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` to see your HackHub instance!
+
+## 📸 Screenshots
+
+### AI-Powered Hackathon Creation
+![Hackathon Creation with AI Copilot](screenshots/hack-create.png)
+
+The AI copilot feature provides intelligent suggestions for hackathon planning, helping organizers quickly fill out forms with relevant information including titles, themes, dates, and more. Users can apply suggestions individually or all at once directly from the conversation interface.
 
 ## 👥 User Roles
 
