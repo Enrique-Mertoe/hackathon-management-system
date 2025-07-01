@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { auth } from '@/lib/auth'
+import Image from 'next/image'
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -99,113 +100,104 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md shadow-lg border-0">
-        <CardHeader>
-          <CardTitle className="text-center">Create your account</CardTitle>
-          <CardDescription className="text-center">
-            Join HackHub to discover amazing hackathons
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className={`p-3 rounded text-sm ${
-                isRateLimited 
-                  ? 'bg-warning/10 border border-warning/20 text-warning' 
-                  : 'bg-destructive/10 border border-destructive/20 text-destructive'
-              }`}>
-                {error}
-                {isRateLimited && (
-                  <div className="mt-2 text-xs">
-                    ⏱️ You can try again in {rateLimitCountdown} seconds
-                  </div>
-                )}
-              </div>
-            )}
-            
-            <Input
-              label="Full Name"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="Enter your full name"
-              required
-            />
-            
-            <Input
-              label="Username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Choose a username"
-              required
-            />
-            
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              required
-            />
-
-            <Select
-              label="Account Type"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-            >
-              <option value="PARTICIPANT">Participant</option>
-              <option value="ORGANIZER">Organizer</option>
-              <option value="MENTOR">Mentor</option>
-            </Select>
-            
-            <Input
-              label="Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Create a password"
-              required
-            />
-            
-            <Input
-              label="Confirm Password"
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              required
-            />
-            
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || isRateLimited}
-            >
-              {loading 
-                ? 'Creating account...' 
-                : isRateLimited 
-                  ? `Wait ${rateLimitCountdown}s to try again`
-                  : 'Create Account'
-              }
-            </Button>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link href="/auth/signin" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-md animate-fade-in">
+        <Card className="shadow-2xl border-0 rounded-2xl p-4 !bg-black/70">
+          <CardHeader>
+            <div className="flex flex-col items-center mb-2">
+              <Image src="/logo.png" alt="HackHub Logo" width={100} height={100} className="mb-4 rounded-full shadow-lg" />
+            </div>
+            <CardTitle className="text-center text-2xl font-bold">Create your account</CardTitle>
+            <CardDescription className="text-center">
+              Join HackHub to discover amazing hackathons
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {error && (
+                <div className={`p-3 rounded text-sm font-medium mb-2 ${
+                  isRateLimited 
+                    ? 'bg-warning/10 border border-warning/20 text-warning' 
+                    : 'bg-destructive/10 border border-destructive/20 text-destructive'
+                }`}>
+                  {error}
+                  {isRateLimited && (
+                    <div className="mt-2 text-xs">
+                      ⏱️ You can try again in {rateLimitCountdown} seconds
+                    </div>
+                  )}
+                </div>
+              )}
+              <Input
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                required
+              />
+              <Input
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Choose a username"
+                required
+              />
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                required
+              />
+              <Select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+              >
+                <option value="PARTICIPANT">Participant</option>
+                <option value="ORGANIZER">Organizer</option>
+                <option value="MENTOR">Mentor</option>
+              </Select>
+              <Input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a password"
+                required
+              />
+              <Input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                required
+              />
+              <Button
+                type="submit"
+                className="w-full py-2 text-base rounded-lg shadow-md hover:shadow-lg transition"
+                disabled={loading || isRateLimited}
+              >
+                {loading 
+                  ? 'Creating account...' 
+                  : isRateLimited 
+                    ? `Wait ${rateLimitCountdown}s to try again`
+                    : 'Create Account'
+                }
+              </Button>
+            </form>
+            <div className="mt-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <Link href="/auth/signin" className="text-primary font-semibold hover:underline">
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

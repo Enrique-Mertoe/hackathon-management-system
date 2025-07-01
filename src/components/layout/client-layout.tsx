@@ -14,6 +14,7 @@ interface ClientLayoutProps {
 export function ClientLayout({children}: ClientLayoutProps) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const pathname = usePathname();
+    const isAuthPage = pathname.startsWith('/auth');
 
     const toggleDrawer = () => {
         setIsDrawerOpen(!isDrawerOpen)
@@ -49,7 +50,7 @@ export function ClientLayout({children}: ClientLayoutProps) {
                         )
                 }
             </div>
-            {/*<Footer />*/}
+            {!isAuthPage && <Footer />}
         </>
     )
 }
