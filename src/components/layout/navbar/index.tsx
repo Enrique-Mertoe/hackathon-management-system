@@ -8,14 +8,15 @@ import {auth} from '@/lib/auth'
 import type {AuthUser} from '@/lib/auth'
 import ProfileDropdown from "@/components/layout/navbar/profile";
 import FloatingSearch from "@/components/layout/navbar/search";
+import Image from "next/image";
 
 const navLinClass = "rounded-full border border-orange-100 bg-orange-100 transition-all duration-200 px-6 py-1";
 
 interface NavbarProps {
-  onMenuClick?: () => void
+    onMenuClick?: () => void
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
+export const Navbar: React.FC<NavbarProps> = ({onMenuClick}) => {
     const [user, setUser] = useState<AuthUser | null>(null)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
@@ -36,19 +37,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     }, [])
 
 
-
-
-
     return (
         <nav className="sm:fixed inset-x-0 bg-[#f5f6fa] top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
                         <Link href="/" className={"flex  items-center space-x-2"}>
-                            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                                <span className="text-primary-foreground font-bold">H</span>
+                            <div className="w-8 h-8 flex items-center justify-center">
+                                <img src={"/logo-favicon.ico"} alt={"HackHub Logo"} className={""}/>
                             </div>
-                            <span className="text-xl font-bold text-primary">HackHub</span>
+                            <div className="h-8 w-22 flex items-center justify-center">
+                                <img src={"/logo-text.png"} alt={"HackHub Logo"} className={""}/>
+                            </div>
                         </Link>
 
                         <div className="hidden md:ml-10 md:flex md:space-x-2">
