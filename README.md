@@ -76,10 +76,27 @@ Visit `http://localhost:3000` to see your HackHub instance!
 
 ## 📸 Screenshots
 
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+
+<div>
+
 ### AI-Powered Hackathon Creation
 ![Hackathon Creation with AI Copilot](screenshots/hack-create.png)
 
 The AI copilot feature provides intelligent suggestions for hackathon planning, helping organizers quickly fill out forms with relevant information including titles, themes, dates, and more. Users can apply suggestions individually or all at once directly from the conversation interface.
+
+</div>
+
+<div>
+
+### Hackathon Management Dashboard
+![Hackathon Details & Analysis View](screenshots/hack-view.png)
+
+The redesigned hackathon details page features small cards with shadows, poster integration, and a context-aware AI assistant. The AI provides hackathon analysis, tech stack recommendations, skill assessments, and preparation timelines to help participants succeed.
+
+</div>
+
+</div>
 
 ## 👥 User Roles
 

@@ -29,7 +29,7 @@ interface CopilotMessage {
   suggestions?: FormSuggestion[]
 }
 
-interface FormSuggestion {
+export interface FormSuggestion {
   field: string
   value: any
   reason: string
@@ -41,6 +41,8 @@ interface CopilotSidepanelProps {
   onClose: () => void
   onApplySuggestions: (suggestions: FormSuggestion[]) => void
   formContext: any
+  posterGenerationMode?: boolean
+  analysisMode?: boolean
 }
 
 const PREDEFINED_PROMPTS = [
@@ -51,11 +53,34 @@ const PREDEFINED_PROMPTS = [
   "Plan a virtual hackathon for blockchain developers"
 ]
 
+const POSTER_GENERATION_PROMPTS = [
+  "Generate a vibrant poster for an AI hackathon with modern design",
+  "Create a poster for a sustainability-focused tech event",
+  "Design a minimalist poster for a university coding competition",
+  "Generate a futuristic poster for a blockchain hackathon",
+  "Create an engaging poster for a beginner-friendly coding event"
+]
+
+const ANALYSIS_PROMPTS = [
+  "Analyze this hackathon and suggest the best tech stack for building solutions",
+  "What programming languages and frameworks would be most suitable for this challenge?",
+  "Help me understand if I have the right skills to succeed in this hackathon",
+  "Create a preparation timeline based on the hackathon dates and requirements",
+  "Suggest relevant past projects or open-source repositories that could help",
+  "What tools and resources would be most helpful for this type of hackathon?",
+  "Explain what this hackathon is really looking for in simple terms",
+  "How can I make my project stand out in this competition?",
+  "What are the key judging criteria I should focus on?",
+  "Suggest similar hackathons or competitions I should consider"
+]
+
 export function CopilotSidepanel({ 
   isOpen, 
   onClose, 
   onApplySuggestions, 
-  formContext 
+  formContext,
+  posterGenerationMode = false,
+  analysisMode = false
 }: CopilotSidepanelProps) {
   const [messages, setMessages] = useState<CopilotMessage[]>([])
   const [inputValue, setInputValue] = useState('')
@@ -208,10 +233,10 @@ export function CopilotSidepanel({
               </Typography>
               
               <Typography variant="caption" sx={{ mb: 1.5, fontWeight: 600, display: 'block' }}>
-                Quick examples:
+                {posterGenerationMode ? 'Poster generation examples:' : analysisMode ? 'Analysis examples:' : 'Quick examples:'}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                {PREDEFINED_PROMPTS.slice(0, 3).map((prompt, index) => (
+                {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : analysisMode ? ANALYSIS_PROMPTS : PREDEFINED_PROMPTS).slice(0, 3).map((prompt, index) => (
                   <Button
                     key={index}
                     variant="outlined"
@@ -369,8 +394,8 @@ export function CopilotSidepanel({
 
         {/* Input */}
         <Box sx={{ p: 1.5 }}>
-          <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5 }}>
-            {PREDEFINED_PROMPTS.slice(3).map((prompt, index) => (
+          <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap' }}>
+            {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : analysisMode ? ANALYSIS_PROMPTS : PREDEFINED_PROMPTS).slice(3).map((prompt, index) => (
               <Chip
                 key={index}
                 label={prompt.split(' ').slice(0, 2).join(' ') + '...'}
