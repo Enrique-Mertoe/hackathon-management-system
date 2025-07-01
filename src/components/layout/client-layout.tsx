@@ -14,7 +14,7 @@ interface ClientLayoutProps {
 export function ClientLayout({children}: ClientLayoutProps) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const pathname = usePathname();
-    const isAuthPage = pathname.startsWith('/auth');
+    const nofooter = pathname.startsWith('/auth') || pathname.startsWith('/dashboard');
 
     const toggleDrawer = () => {
         setIsDrawerOpen(!isDrawerOpen)
@@ -25,20 +25,20 @@ export function ClientLayout({children}: ClientLayoutProps) {
     }
 
     return (
-        <>
+        <div className={"flex w-full h-screen overflow-y-hidden flex-col sm:h-auto"}>
             {
                 pathname.startsWith("/dashboard") ? (
                     <Navbar onMenuClick={toggleDrawer}/>
-                ):(
+                ) : (
                     <NavLanding/>
                 )
             }
-            <div className="flex bg-[#f4f0ef]">
+            <div className="flex flex-grow w-full p-0 overflow-y-auto sm:flex-row flex-col bg-[#f5f6fa]">
                 {
                     pathname.startsWith("/dashboard") ? (
                             <>
                                 <Drawer isOpen={isDrawerOpen} onClose={closeDrawer}/>
-                                <main className="flex-1 ps-2 lg:ml-34 ">
+                                <main className="flex-1 sm:pt-20 w-full px-[1px] overflow-auto sm:pl-[6rem] ">
                                     {children}
                                 </main>
                             </>
@@ -50,7 +50,7 @@ export function ClientLayout({children}: ClientLayoutProps) {
                         )
                 }
             </div>
-            {!isAuthPage && <Footer />}
-        </>
+            {/*{!nofooter && <Footer/>}*/}
+        </div>
     )
 }
