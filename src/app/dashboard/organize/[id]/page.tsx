@@ -15,7 +15,9 @@ import {
   LinearProgress,
   Typography,
   Tooltip,
-  CircularProgress
+  CircularProgress,
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
 import {
   AutoAwesome as AIIcon,
@@ -66,6 +68,11 @@ interface Hackathon {
 export default function OrganizeHackathonPage() {
   const params = useParams()
   const router = useRouter()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'))
+  const isSmall = useMediaQuery(theme.breakpoints.down('sm'))
+  
   const [user, setUser] = useState<AuthUser | null>(null)
   const [hackathon, setHackathon] = useState<Hackathon | null>(null)
   const [loading, setLoading] = useState(true)
@@ -132,6 +139,24 @@ export default function OrganizeHackathonPage() {
     // For analysis mode, we might want to handle suggestions differently
     // For now, we'll log them
     console.log('Analysis suggestions received:', suggestions)
+  }
+
+  const handleRegistrations = () => {
+    router.push(`/dashboard/participants?hackathon=${hackathon?.id}`)
+  }
+
+  const handleTeams = () => {
+    // TODO: Create teams management page
+    router.push(`/dashboard/organize/${hackathon?.id}/teams`)
+  }
+
+  const handleUpdates = () => {
+    // TODO: Create updates/announcements page
+    router.push(`/dashboard/organize/${hackathon?.id}/updates`)
+  }
+
+  const handleAnalytics = () => {
+    router.push(`/dashboard/analytics?hackathon=${hackathon?.id}`)
   }
 
   const getStatusColor = (status: string) => {
@@ -219,45 +244,77 @@ export default function OrganizeHackathonPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 1, sm: 2, md: 3 }, px: { xs: 1, sm: 2 } }}>
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
+        <Box sx={{ mb: { xs: 2, md: 3 } }}>
           <Button
             variant="text"
             startIcon={<BackIcon />}
             onClick={() => router.push('/dashboard/organize')}
-            sx={{ mb: 2 }}
+            sx={{ mb: { xs: 1, md: 2 } }}
+            size={isSmall ? "small" : "medium"}
           >
             Back to Organize
           </Button>
           
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 3 }}>
-            <Box>
-              <Typography variant="h3" component="h1" fontWeight="bold" gutterBottom>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', 
+            justifyContent: 'space-between', 
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: { xs: 2, md: 3 }
+          }}>
+            <Box sx={{ flex: 1, width: '100%' }}>
+              <Typography 
+                variant={isSmall ? "h5" : isMobile ? "h4" : "h3"} 
+                component="h1" 
+                fontWeight="bold" 
+                gutterBottom
+                sx={{ 
+                  lineHeight: { xs: 1.2, md: 1.3 },
+                  wordBreak: 'break-word'
+                }}
+              >
                 {hackathon.title}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: { xs: 1, md: 2 }, 
+                mb: 2,
+                flexWrap: 'wrap'
+              }}>
                 <Chip 
                   label={hackathon.status.replace('_', ' ')} 
                   {...getStatusColor(hackathon.status)}
-                  size="small"
+                  size={isSmall ? "small" : "medium"}
                 />
-                <Typography variant="body2" color="text.secondary">
-                  <ParticipantsIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                <Typography variant={isSmall ? "caption" : "body2"} color="text.secondary">
+                  <ParticipantsIcon sx={{ 
+                    fontSize: { xs: 14, md: 16 }, 
+                    mr: 0.5, 
+                    verticalAlign: 'middle' 
+                  }} />
                   {hackathon.registration_count} registered
                 </Typography>
               </Box>
             </Box>
             
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+            <Box sx={{ 
+              display: 'flex', 
+              gap: { xs: 1, md: 1.5 }, 
+              alignItems: 'center',
+              width: { xs: '100%', md: 'auto' },
+              justifyContent: { xs: 'space-between', md: 'flex-end' }
+            }}>
               <Tooltip title="Analyze with AI - Get insights, tech recommendations, and preparation tips">
                 <IconButton
                   onClick={handleAnalyzeWithAI}
                   sx={{
                     bgcolor: 'primary.main',
                     color: 'white',
-                    width: 48,
-                    height: 48,
+                    width: { xs: 40, md: 48 },
+                    height: { xs: 40, md: 48 },
                     '&:hover': {
                       bgcolor: 'primary.dark',
                       transform: 'scale(1.05)'
@@ -266,20 +323,24 @@ export default function OrganizeHackathonPage() {
                     boxShadow: 2
                   }}
                 >
-                  <AIIcon />
+                  <AIIcon sx={{ fontSize: { xs: 20, md: 24 } }} />
                 </IconButton>
               </Tooltip>
               <Button
                 variant="outlined"
-                startIcon={<ViewIcon />}
-                size="small"
+                startIcon={!isSmall && <ViewIcon />}
+                size={isSmall ? "small" : "medium"}
+                sx={{ minWidth: { xs: 'auto', sm: 'auto' } }}
+                onClick={() => router.push(`/hackathons/${hackathon.id}`)}
               >
-                View Public
+                {isSmall ? 'View' : 'View Public'}
               </Button>
               <Button
                 variant="contained"
-                startIcon={<EditIcon />}
-                size="small"
+                startIcon={!isSmall && <EditIcon />}
+                size={isSmall ? "small" : "medium"}
+                sx={{ minWidth: { xs: 'auto', sm: 'auto' } }}
+                onClick={() => router.push(`/dashboard/organize/edit/${hackathon.id}`)}
               >
                 Edit
               </Button>
@@ -287,17 +348,18 @@ export default function OrganizeHackathonPage() {
           </Box>
         </Box>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, md: 3 }}>
           {/* Main Content - Left Side */}
           <Grid size={{ xs: 12, lg: 8 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1.5, md: 2 }}>
               {/* Poster Section */}
               {hackathon.poster_url && (
                 <Grid size={12}>
                   <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
                     <CardMedia
+                        //@ts-ignore
                       component="img"
-                      height={200}
+                      height={{ xs: 150, sm: 200, md: 250 }}
                       image={hackathon.poster_url}
                       alt="Hackathon Poster"
                       sx={{ objectFit: 'cover' }}
@@ -309,35 +371,72 @@ export default function OrganizeHackathonPage() {
               {/* Overview */}
               <Grid size={12}>
                 <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
+                  <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                    <Typography 
+                      variant={isSmall ? "subtitle1" : "h6"} 
+                      gutterBottom 
+                      color="primary" 
+                      fontWeight="bold"
+                    >
                       Overview
                     </Typography>
                     <Box sx={{ space: 2 }}>
-                      <Box sx={{ mb: 3 }}>
-                        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      <Box sx={{ mb: { xs: 2, md: 3 } }}>
+                        <Typography 
+                          variant={isSmall ? "caption" : "subtitle2"} 
+                          fontWeight="bold" 
+                          gutterBottom
+                          sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                        >
                           Description
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography 
+                          variant={isSmall ? "caption" : "body2"} 
+                          color="text.secondary"
+                          sx={{ lineHeight: { xs: 1.4, md: 1.6 } }}
+                        >
                           {hackathon.description}
                         </Typography>
                       </Box>
                       
                       {hackathon.theme && (
-                        <Box sx={{ mb: 3 }}>
-                          <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                        <Box sx={{ mb: { xs: 2, md: 3 } }}>
+                          <Typography 
+                            variant={isSmall ? "caption" : "subtitle2"} 
+                            fontWeight="bold" 
+                            gutterBottom
+                            sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                          >
                             Theme
                           </Typography>
-                          <Chip label={hackathon.theme} color="secondary" variant="outlined" size="small" />
+                          <Chip 
+                            label={hackathon.theme} 
+                            color="secondary" 
+                            variant="outlined" 
+                            size={isSmall ? "small" : "medium"} 
+                          />
                         </Box>
                       )}
 
                       {hackathon.rules && (
                         <Box>
-                          <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                          <Typography 
+                            variant={isSmall ? "caption" : "subtitle2"} 
+                            fontWeight="bold" 
+                            gutterBottom
+                            sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                          >
                             Rules & Guidelines
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                          <Typography 
+                            variant={isSmall ? "caption" : "body2"} 
+                            color="text.secondary" 
+                            sx={{ 
+                              whiteSpace: 'pre-wrap',
+                              lineHeight: { xs: 1.4, md: 1.6 },
+                              fontSize: { xs: '0.75rem', md: '0.875rem' }
+                            }}
+                          >
                             {hackathon.rules}
                           </Typography>
                         </Box>
@@ -351,32 +450,61 @@ export default function OrganizeHackathonPage() {
               {hackathon.requirements && (
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Card sx={{ boxShadow: 2, borderRadius: 2, height: '100%' }}>
-                    <CardContent sx={{ p: 3 }}>
-                      <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
+                    <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                      <Typography 
+                        variant={isSmall ? "subtitle1" : "h6"} 
+                        gutterBottom 
+                        color="primary" 
+                        fontWeight="bold"
+                      >
                         Requirements
                       </Typography>
                       <Box sx={{ space: 2 }}>
                         {hackathon.requirements.skills && hackathon.requirements.skills.length > 0 && (
-                          <Box sx={{ mb: 2 }}>
-                            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                          <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                            <Typography 
+                              variant={isSmall ? "caption" : "subtitle2"} 
+                              fontWeight="bold" 
+                              gutterBottom
+                              sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                            >
                               Skills
                             </Typography>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                               {hackathon.requirements.skills.map((skill: string, index: number) => (
-                                <Chip key={index} label={skill} size="small" color="info" variant="outlined" />
+                                <Chip 
+                                  key={index} 
+                                  label={skill} 
+                                  size="small" 
+                                  color="info" 
+                                  variant="outlined" 
+                                  sx={{ fontSize: { xs: '0.7rem', md: '0.75rem' } }}
+                                />
                               ))}
                             </Box>
                           </Box>
                         )}
                         
                         {hackathon.requirements.tools && hackathon.requirements.tools.length > 0 && (
-                          <Box sx={{ mb: 2 }}>
-                            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                          <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                            <Typography 
+                              variant={isSmall ? "caption" : "subtitle2"} 
+                              fontWeight="bold" 
+                              gutterBottom
+                              sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                            >
                               Tools
                             </Typography>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                               {hackathon.requirements.tools.map((tool: string, index: number) => (
-                                <Chip key={index} label={tool} size="small" color="warning" variant="outlined" />
+                                <Chip 
+                                  key={index} 
+                                  label={tool} 
+                                  size="small" 
+                                  color="warning" 
+                                  variant="outlined" 
+                                  sx={{ fontSize: { xs: '0.7rem', md: '0.75rem' } }}
+                                />
                               ))}
                             </Box>
                           </Box>
@@ -384,7 +512,12 @@ export default function OrganizeHackathonPage() {
 
                         {hackathon.requirements.experience_level && (
                           <Box>
-                            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                            <Typography 
+                              variant={isSmall ? "caption" : "subtitle2"} 
+                              fontWeight="bold" 
+                              gutterBottom
+                              sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                            >
                               Experience Level
                             </Typography>
                             <Chip 
@@ -392,6 +525,7 @@ export default function OrganizeHackathonPage() {
                               size="small" 
                               color="success" 
                               variant="filled" 
+                              sx={{ fontSize: { xs: '0.7rem', md: '0.75rem' } }}
                             />
                           </Box>
                         )}
@@ -405,23 +539,61 @@ export default function OrganizeHackathonPage() {
               {hackathon.judging_criteria && (
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Card sx={{ boxShadow: 2, borderRadius: 2, height: '100%' }}>
-                    <CardContent sx={{ p: 3 }}>
-                      <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
+                    <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                      <Typography 
+                        variant={isSmall ? "subtitle1" : "h6"} 
+                        gutterBottom 
+                        color="primary" 
+                        fontWeight="bold"
+                      >
                         Judging Criteria
                       </Typography>
                       <Box sx={{ space: 1 }}>
                         {Object.entries(hackathon.judging_criteria).map(([criterion, weight]) => (
-                          <Box key={criterion} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="body2" fontWeight="medium" sx={{ textTransform: 'capitalize' }}>
+                          <Box 
+                            key={criterion} 
+                            sx={{ 
+                              display: 'flex', 
+                              justifyContent: 'space-between', 
+                              alignItems: 'center', 
+                              mb: { xs: 1.5, md: 1 },
+                              flexDirection: { xs: 'column', sm: 'row' },
+                              gap: { xs: 0.5, sm: 1 }
+                            }}
+                          >
+                            <Typography 
+                              variant={isSmall ? "caption" : "body2"} 
+                              fontWeight="medium" 
+                              sx={{ 
+                                textTransform: 'capitalize',
+                                fontSize: { xs: '0.75rem', md: '0.875rem' },
+                                width: { xs: '100%', sm: 'auto' }
+                              }}
+                            >
                               {criterion.replace('_', ' ')}
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: 1,
+                              width: { xs: '100%', sm: 'auto' },
+                              justifyContent: { xs: 'space-between', sm: 'flex-end' }
+                            }}>
                               <LinearProgress 
                                 variant="determinate" 
                                 value={weight as number} 
-                                sx={{ width: 60, height: 6, borderRadius: 3 }}
+                                sx={{ 
+                                  width: { xs: 80, md: 60 }, 
+                                  height: { xs: 4, md: 6 }, 
+                                  borderRadius: 3 
+                                }}
                               />
-                              <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                              <Typography 
+                                variant={isSmall ? "caption" : "body2"} 
+                                color="text.secondary" 
+                                fontWeight="bold"
+                                sx={{ fontSize: { xs: '0.7rem', md: '0.875rem' } }}
+                              >
                                 {weight as number}%
                               </Typography>
                             </Box>
@@ -437,51 +609,124 @@ export default function OrganizeHackathonPage() {
 
           {/* Sidebar - Right Side */}
           <Grid size={{ xs: 12, lg: 4 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1.5, md: 2 }}>
               {/* Event Details */}
               <Grid size={{ xs: 12, sm: 6, lg: 12 }}>
                 <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
-                      <EventIcon sx={{ fontSize: 20, mr: 1, verticalAlign: 'middle' }} />
+                  <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                    <Typography 
+                      variant={isSmall ? "subtitle1" : "h6"} 
+                      gutterBottom 
+                      color="primary" 
+                      fontWeight="bold"
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                      <EventIcon sx={{ fontSize: { xs: 18, md: 20 } }} />
                       Event Details
                     </Typography>
                     <Box sx={{ space: 2 }}>
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                      <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          fontWeight="bold"
+                          sx={{ 
+                            textTransform: 'uppercase', 
+                            letterSpacing: 0.5,
+                            fontSize: { xs: '0.65rem', md: '0.75rem' }
+                          }}
+                        >
                           Difficulty
                         </Typography>
-                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                        <Typography 
+                          variant={isSmall ? "caption" : "body2"} 
+                          sx={{ 
+                            textTransform: 'capitalize',
+                            display: 'block',
+                            fontSize: { xs: '0.8rem', md: '0.875rem' }
+                          }}
+                        >
                           {hackathon.difficulty_level.toLowerCase()}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold">
-                          <LocationIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                      <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          fontWeight="bold"
+                          sx={{ 
+                            textTransform: 'uppercase', 
+                            letterSpacing: 0.5,
+                            fontSize: { xs: '0.65rem', md: '0.75rem' },
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5
+                          }}
+                        >
+                          <LocationIcon sx={{ fontSize: { xs: 10, md: 12 } }} />
                           Location
                         </Typography>
-                        <Typography variant="body2">
+                        <Typography 
+                          variant={isSmall ? "caption" : "body2"}
+                          sx={{ 
+                            display: 'block',
+                            fontSize: { xs: '0.8rem', md: '0.875rem' }
+                          }}
+                        >
                           {hackathon.is_virtual ? 'Virtual Event' : hackathon.location}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold">
-                          <TeamIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                      <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          fontWeight="bold"
+                          sx={{ 
+                            textTransform: 'uppercase', 
+                            letterSpacing: 0.5,
+                            fontSize: { xs: '0.65rem', md: '0.75rem' },
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5
+                          }}
+                        >
+                          <TeamIcon sx={{ fontSize: { xs: 10, md: 12 } }} />
                           Team Size
                         </Typography>
-                        <Typography variant="body2">
+                        <Typography 
+                          variant={isSmall ? "caption" : "body2"}
+                          sx={{ 
+                            display: 'block',
+                            fontSize: { xs: '0.8rem', md: '0.875rem' }
+                          }}
+                        >
                           {hackathon.min_team_size} - {hackathon.max_team_size} members
                         </Typography>
                       </Box>
 
                       {hackathon.max_participants && (
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                        <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary" 
+                            fontWeight="bold"
+                            sx={{ 
+                              textTransform: 'uppercase', 
+                              letterSpacing: 0.5,
+                              fontSize: { xs: '0.65rem', md: '0.75rem' }
+                            }}
+                          >
                             Max Participants
                           </Typography>
-                          <Typography variant="body2">
+                          <Typography 
+                            variant={isSmall ? "caption" : "body2"}
+                            sx={{ 
+                              display: 'block',
+                              fontSize: { xs: '0.8rem', md: '0.875rem' }
+                            }}
+                          >
                             {hackathon.max_participants.toLocaleString()}
                           </Typography>
                         </Box>
@@ -489,11 +734,28 @@ export default function OrganizeHackathonPage() {
 
                       {hackathon.prize_pool && (
                         <Box>
-                          <Typography variant="caption" color="text.secondary" fontWeight="bold">
-                            <PrizeIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary" 
+                            fontWeight="bold"
+                            sx={{ 
+                              textTransform: 'uppercase', 
+                              letterSpacing: 0.5,
+                              fontSize: { xs: '0.65rem', md: '0.75rem' },
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5
+                            }}
+                          >
+                            <PrizeIcon sx={{ fontSize: { xs: 10, md: 12 } }} />
                             Prize Pool
                           </Typography>
-                          <Typography variant="h6" color="primary" fontWeight="bold">
+                          <Typography 
+                            variant={isSmall ? "subtitle1" : "h6"} 
+                            color="primary" 
+                            fontWeight="bold"
+                            sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
+                          >
                             {formatCurrency(hackathon.prize_pool)}
                           </Typography>
                         </Box>
@@ -506,53 +768,138 @@ export default function OrganizeHackathonPage() {
               {/* Timeline */}
               <Grid size={{ xs: 12, sm: 6, lg: 12 }}>
                 <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
-                      <TimeIcon sx={{ fontSize: 20, mr: 1, verticalAlign: 'middle' }} />
+                  <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                    <Typography 
+                      variant={isSmall ? "subtitle1" : "h6"} 
+                      gutterBottom 
+                      color="primary" 
+                      fontWeight="bold"
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                      <TimeIcon sx={{ fontSize: { xs: 18, md: 20 } }} />
                       Timeline
                     </Typography>
                     <Box sx={{ space: 2 }}>
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                      <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          fontWeight="bold"
+                          sx={{ 
+                            textTransform: 'uppercase', 
+                            letterSpacing: 0.5,
+                            fontSize: { xs: '0.65rem', md: '0.75rem' }
+                          }}
+                        >
                           Registration Opens
                         </Typography>
-                        <Typography variant="body2">
+                        <Typography 
+                          variant={isSmall ? "caption" : "body2"}
+                          sx={{ 
+                            display: 'block',
+                            fontSize: { xs: '0.75rem', md: '0.875rem' },
+                            lineHeight: 1.4
+                          }}
+                        >
                           {formatDate(hackathon.registration_start)}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                      <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          fontWeight="bold"
+                          sx={{ 
+                            textTransform: 'uppercase', 
+                            letterSpacing: 0.5,
+                            fontSize: { xs: '0.65rem', md: '0.75rem' }
+                          }}
+                        >
                           Registration Closes
                         </Typography>
-                        <Typography variant="body2">
+                        <Typography 
+                          variant={isSmall ? "caption" : "body2"}
+                          sx={{ 
+                            display: 'block',
+                            fontSize: { xs: '0.75rem', md: '0.875rem' },
+                            lineHeight: 1.4
+                          }}
+                        >
                           {formatDate(hackathon.registration_end)}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                      <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          fontWeight="bold"
+                          sx={{ 
+                            textTransform: 'uppercase', 
+                            letterSpacing: 0.5,
+                            fontSize: { xs: '0.65rem', md: '0.75rem' }
+                          }}
+                        >
                           Event Starts
                         </Typography>
-                        <Typography variant="body2">
+                        <Typography 
+                          variant={isSmall ? "caption" : "body2"}
+                          sx={{ 
+                            display: 'block',
+                            fontSize: { xs: '0.75rem', md: '0.875rem' },
+                            lineHeight: 1.4
+                          }}
+                        >
                           {formatDate(hackathon.start_date)}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                      <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          fontWeight="bold"
+                          sx={{ 
+                            textTransform: 'uppercase', 
+                            letterSpacing: 0.5,
+                            fontSize: { xs: '0.65rem', md: '0.75rem' }
+                          }}
+                        >
                           Event Ends
                         </Typography>
-                        <Typography variant="body2">
+                        <Typography 
+                          variant={isSmall ? "caption" : "body2"}
+                          sx={{ 
+                            display: 'block',
+                            fontSize: { xs: '0.75rem', md: '0.875rem' },
+                            lineHeight: 1.4
+                          }}
+                        >
                           {formatDate(hackathon.end_date)}
                         </Typography>
                       </Box>
 
                       <Box>
-                        <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          fontWeight="bold"
+                          sx={{ 
+                            textTransform: 'uppercase', 
+                            letterSpacing: 0.5,
+                            fontSize: { xs: '0.65rem', md: '0.75rem' }
+                          }}
+                        >
                           Timezone
                         </Typography>
-                        <Typography variant="body2">
+                        <Typography 
+                          variant={isSmall ? "caption" : "body2"}
+                          sx={{ 
+                            display: 'block',
+                            fontSize: { xs: '0.75rem', md: '0.875rem' }
+                          }}
+                        >
                           {hackathon.timezone}
                         </Typography>
                       </Box>
@@ -564,29 +911,44 @@ export default function OrganizeHackathonPage() {
               {/* Quick Actions */}
               <Grid size={12}>
                 <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
+                  <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                    <Typography 
+                      variant={isSmall ? "subtitle1" : "h6"} 
+                      gutterBottom 
+                      color="primary" 
+                      fontWeight="bold"
+                    >
                       Quick Actions
                     </Typography>
-                    <Grid container spacing={1}>
+                    <Grid container spacing={{ xs: 0.5, md: 1 }}>
                       <Grid size={6}>
                         <Button
                           fullWidth
                           variant="outlined"
-                          size="small"
-                          startIcon={<ParticipantsIcon />}
-                          sx={{ fontSize: '0.75rem' }}
+                          size={isSmall ? "small" : "medium"}
+                          startIcon={!isSmall && <ParticipantsIcon />}
+                          onClick={handleRegistrations}
+                          sx={{ 
+                            fontSize: { xs: '0.65rem', md: '0.75rem' },
+                            py: { xs: 0.5, md: 1 },
+                            minHeight: { xs: 32, md: 36 }
+                          }}
                         >
-                          Registrations
+                          {isSmall ? 'Registrations' : 'Registrations'}
                         </Button>
                       </Grid>
                       <Grid size={6}>
                         <Button
                           fullWidth
                           variant="outlined"
-                          size="small"
-                          startIcon={<TeamIcon />}
-                          sx={{ fontSize: '0.75rem' }}
+                          size={isSmall ? "small" : "medium"}
+                          startIcon={!isSmall && <TeamIcon />}
+                          onClick={handleTeams}
+                          sx={{ 
+                            fontSize: { xs: '0.65rem', md: '0.75rem' },
+                            py: { xs: 0.5, md: 1 },
+                            minHeight: { xs: 32, md: 36 }
+                          }}
                         >
                           Teams
                         </Button>
@@ -595,9 +957,14 @@ export default function OrganizeHackathonPage() {
                         <Button
                           fullWidth
                           variant="outlined"
-                          size="small"
-                          startIcon={<AnnouncementIcon />}
-                          sx={{ fontSize: '0.75rem' }}
+                          size={isSmall ? "small" : "medium"}
+                          startIcon={!isSmall && <AnnouncementIcon />}
+                          onClick={handleUpdates}
+                          sx={{ 
+                            fontSize: { xs: '0.65rem', md: '0.75rem' },
+                            py: { xs: 0.5, md: 1 },
+                            minHeight: { xs: 32, md: 36 }
+                          }}
                         >
                           Updates
                         </Button>
@@ -606,9 +973,14 @@ export default function OrganizeHackathonPage() {
                         <Button
                           fullWidth
                           variant="outlined"
-                          size="small"
-                          startIcon={<AnalyticsIcon />}
-                          sx={{ fontSize: '0.75rem' }}
+                          size={isSmall ? "small" : "medium"}
+                          startIcon={!isSmall && <AnalyticsIcon />}
+                          onClick={handleAnalytics}
+                          sx={{ 
+                            fontSize: { xs: '0.65rem', md: '0.75rem' },
+                            py: { xs: 0.5, md: 1 },
+                            minHeight: { xs: 32, md: 36 }
+                          }}
                         >
                           Analytics
                         </Button>
