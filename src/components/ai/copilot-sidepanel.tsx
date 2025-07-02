@@ -238,7 +238,7 @@ export function CopilotSidepanel({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AIIcon fontSize="small" />
             <Typography variant="subtitle1" fontWeight="600">
-              AI Copilot
+              HackHub AI
             </Typography>
           </Box>
           <IconButton
@@ -276,12 +276,14 @@ export function CopilotSidepanel({
                 {posterGenerationMode ? 'Poster generation examples:' : 
                  analysisMode ? 'Analysis examples:' : 
                  organizerInsightsMode ? 'Organizer insights examples:' : 
+                 scheduleInsightsMode ? 'Schedule optimization examples:' :
                  'Quick examples:'}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : 
                   analysisMode ? ANALYSIS_PROMPTS : 
                   organizerInsightsMode ? ORGANIZER_INSIGHTS_PROMPTS : 
+                  scheduleInsightsMode ? SCHEDULE_INSIGHTS_PROMPTS :
                   PREDEFINED_PROMPTS).slice(0, 3).map((prompt, index) => (
                   <Button
                     key={index}
@@ -444,6 +446,7 @@ export function CopilotSidepanel({
             {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : 
               analysisMode ? ANALYSIS_PROMPTS : 
               organizerInsightsMode ? ORGANIZER_INSIGHTS_PROMPTS : 
+              scheduleInsightsMode ? SCHEDULE_INSIGHTS_PROMPTS :
               PREDEFINED_PROMPTS).slice(3).map((prompt, index) => (
               <Chip
                 key={index}

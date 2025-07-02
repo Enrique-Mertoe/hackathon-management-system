@@ -31,7 +31,6 @@ import {
   Schedule as ScheduleIcon,
   Event as EventIcon,
   PlayArrow as StartIcon,
-  Stop as EndIcon,
   Group as TeamIcon,
   Assessment as JudgeIcon,
   EmojiEvents as AwardIcon,
@@ -189,6 +188,26 @@ export default function SchedulePage() {
 
   const handleApplySuggestions = (suggestions: FormSuggestion[]) => {
     console.log('Schedule insights received:', suggestions)
+  }
+
+  const handleAddEvent = () => {
+    // TODO: Implement add event functionality
+    console.log('Add event clicked')
+  }
+
+  const handleViewCalendar = () => {
+    // TODO: Navigate to calendar view
+    console.log('View calendar clicked')
+  }
+
+  const handleScheduleTemplates = () => {
+    // TODO: Navigate to schedule templates
+    console.log('Schedule templates clicked')
+  }
+
+  const handleNotifyParticipants = () => {
+    // TODO: Implement participant notification
+    console.log('Notify participants clicked')
   }
 
   const getEventIcon = (type: string) => {
@@ -443,6 +462,7 @@ export default function SchedulePage() {
                           variant="outlined"
                           size="small"
                           startIcon={<AddIcon />}
+                          onClick={handleAddEvent}
                           sx={{ mb: 1 }}
                         >
                           Add Schedule Event
@@ -454,6 +474,7 @@ export default function SchedulePage() {
                           variant="outlined"
                           size="small"
                           startIcon={<EventIcon />}
+                          onClick={handleViewCalendar}
                           sx={{ mb: 1 }}
                         >
                           View Calendar
@@ -465,6 +486,7 @@ export default function SchedulePage() {
                           variant="outlined"
                           size="small"
                           startIcon={<ScheduleIcon />}
+                          onClick={handleScheduleTemplates}
                           sx={{ mb: 1 }}
                         >
                           Schedule Templates
@@ -476,6 +498,7 @@ export default function SchedulePage() {
                           variant="outlined"
                           size="small"
                           startIcon={<TeamIcon />}
+                          onClick={handleNotifyParticipants}
                         >
                           Notify Participants
                         </Button>

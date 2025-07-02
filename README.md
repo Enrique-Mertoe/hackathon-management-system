@@ -98,6 +98,15 @@ The redesigned hackathon details page features small cards with shadows, poster 
 
 </div>
 
+<div style="margin: 20px 0;">
+
+### Responsive Design & Mobile Experience
+![Responsive Design Across Devices](screenshots/responsive.png)
+
+HackHub features a fully responsive design that adapts seamlessly across desktop, tablet, and mobile devices. The Material-UI components and custom grid layouts ensure optimal user experience on any screen size, with touch-friendly interfaces and mobile-optimized navigation.
+
+</div>
+
 ## 👥 User Roles
 
 ### Participant
