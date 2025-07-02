@@ -171,7 +171,7 @@ const PaymentForm: React.FC<{
             <Card sx={{ mb: 2, bgcolor: 'grey.50' }}>
                 <CardContent sx={{ p: 2 }}>
                     <Grid container spacing={2} alignItems="center">
-                        <Grid item xs={8}>
+                        <Grid size={{xs:8}}>
                             <Typography variant="body2" color="text.secondary">
                                 Prize Pool: {formatCurrency(prizePool)}
                             </Typography>
@@ -179,7 +179,7 @@ const PaymentForm: React.FC<{
                                 Platform Fee (10%): {formatCurrency(platformFee)}
                             </Typography>
                         </Grid>
-                        <Grid item xs={4} sx={{ textAlign: 'right' }}>
+                        <Grid size={{xs:4}} sx={{ textAlign: 'right' }}>
                             <Typography variant="h6" fontWeight="bold" color="primary">
                                 {formatCurrency(totalAmount)}
                             </Typography>
