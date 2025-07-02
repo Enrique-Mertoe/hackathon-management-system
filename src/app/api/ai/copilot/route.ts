@@ -1,16 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { aiService } from '@/lib/ai-service'
+import { auth } from '@/lib/auth'
+import { supabase } from '@/lib/supabase.server'
 
 export async function POST(request: NextRequest) {
   console.log('Copilot API called')
   
   try {
+    // Check user authentication first
+    const user = await auth.getCurrentUser(await supabase())
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in to use the AI assistant.' },
+        { status: 401 }
+      )
+    }
+
+    console.log('Authenticated user:', { id: user.id, email: user.email })
+
     const body = await request.json()
     console.log('Request body received:', { 
       message: body.message?.substring(0, 100),
       fullMessage: body.message,
       formContext: Object.keys(body.formContext || {}),
-      conversationHistory: body.conversationHistory?.length || 0
+      conversationHistory: body.conversationHistory?.length || 0,
+      userId: user.id
     })
     
     const { message, formContext, conversationHistory } = body
@@ -32,7 +47,7 @@ export async function POST(request: NextRequest) {
     console.log('Processing AI query...')
     const result = await aiService.processUserQuery(
       message,
-      formContext || {},
+      { ...formContext, userId: user.id, userEmail: user.email },
       conversationHistory || []
     )
 

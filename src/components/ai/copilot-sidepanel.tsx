@@ -12,13 +12,17 @@ import {
   CircularProgress,
   Divider,
   Slide,
-  Alert
+  Alert,
+  Card,
+  CardContent
 } from '@mui/material'
 import {
   Close as CloseIcon,
   Send as SendIcon,
   AutoAwesome as AIIcon,
-  Lightbulb as IdeaIcon
+  Lightbulb as IdeaIcon,
+  Login as LoginIcon,
+  PersonAdd as SignupIcon
 } from '@mui/icons-material'
 
 interface CopilotMessage {
@@ -50,6 +54,7 @@ interface CopilotSidepanelProps {
   scheduleInsightsMode?: boolean
   deepInsightsMode?: boolean
   editMode?: boolean
+  currentUser?: any // Add current user prop
 }
 
 const PREDEFINED_PROMPTS = [
@@ -120,7 +125,8 @@ export function CopilotSidepanel({
   reportsInsightsMode = false,
   scheduleInsightsMode = false,
   deepInsightsMode = false,
-  editMode = false
+  editMode = false,
+  currentUser
 }: CopilotSidepanelProps) {
   const [messages, setMessages] = useState<CopilotMessage[]>([])
   const [inputValue, setInputValue] = useState('')
@@ -181,12 +187,22 @@ export function CopilotSidepanel({
 
       setMessages(prev => [...prev, aiMessage])
 
-    } catch (error) {
+    } catch (error: any) {
+      let errorContent = `Sorry, I encountered an error: ${error.message}. Please try again.`
+      
+      // Handle authentication errors specifically
+      if (error.message?.includes('Authentication required') || error.message?.includes('sign in')) {
+        errorContent = 'Please sign in to use the AI assistant. You will be redirected to the login page.'
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          window.location.href = '/auth/signin'
+        }, 2000)
+      }
+
       const errorMessage: CopilotMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        //@ts-ignore
-        content: `Sorry, I encountered an error: ${error.message}. Please try again.`,
+        content: errorContent,
         timestamp: new Date()
       }
       setMessages(prev => [...prev, errorMessage])
@@ -203,6 +219,116 @@ export function CopilotSidepanel({
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
+
+  // Function to parse message content and convert *text* to bold primary color
+  const parseMessageContent = (content: string) => {
+    const parts = content.split(/(\*\*.*?\*\*|\*.*?\*)/g)
+    
+    return parts.map((part, index) => {
+      // Handle **bold** text (double asterisks)
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const text = part.slice(2, -2)
+        return (
+          <Box
+            key={index}
+            component="span"
+            sx={{ 
+              fontWeight: 'bold', 
+              color: 'primary.main',
+              fontSize: 'inherit'
+            }}
+          >
+            {text}
+          </Box>
+        )
+      }
+      // Handle *emphasis* text (single asterisks)
+      else if (part.startsWith('*') && part.endsWith('*')) {
+        const text = part.slice(1, -1)
+        return (
+          <Box
+            key={index}
+            component="span"
+            sx={{ 
+              fontWeight: 'bold', 
+              color: 'primary.main',
+              fontSize: 'inherit'
+            }}
+          >
+            {text}
+          </Box>
+        )
+      }
+      // Regular text
+      else {
+        return part
+      }
+    })
+  }
+
+  // Show login prompt if no user is logged in
+  const renderLoginPrompt = () => (
+    <Box sx={{ p: 3, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <AIIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2, mx: 'auto' }} />
+      <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
+        HackHub AI Assistant
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, lineHeight: 1.6 }}>
+        Get personalized hackathon insights, recommendations, and analysis from our AI assistant.
+      </Typography>
+      
+      <Card sx={{ mb: 3, bgcolor: 'grey.50' }}>
+        <CardContent sx={{ p: 2 }}>
+          <Typography variant="subtitle2" color="primary" fontWeight="600" gutterBottom>
+            ✨ What you'll get:
+          </Typography>
+          <Box sx={{ textAlign: 'left' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              • Personalized hackathon recommendations
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              • Tech stack and skill suggestions
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              • Project planning assistance
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Competition strategy insights
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Button
+          variant="contained"
+          fullWidth
+          startIcon={<LoginIcon />}
+          onClick={() => {
+            window.location.href = '/auth/signin'
+          }}
+          sx={{ py: 1.5 }}
+        >
+          Sign In to Continue
+        </Button>
+        <Button
+          variant="outlined"
+          fullWidth
+          startIcon={<SignupIcon />}
+          onClick={() => {
+            window.location.href = '/auth/signup'
+          }}
+          sx={{ py: 1.5 }}
+        >
+          Create Account
+        </Button>
+      </Box>
+
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 2, opacity: 0.8 }}>
+        Join thousands of developers using HackHub AI
+      </Typography>
+    </Box>
+  )
 
   return (
     <Slide direction="left" in={isOpen} mountOnEnter unmountOnExit>
@@ -256,13 +382,15 @@ export function CopilotSidepanel({
           sx={{
             flex: 1,
             overflow: 'auto',
-            p: 1.5,
+            p: currentUser ? 1.5 : 0,
             display: 'flex',
             flexDirection: 'column',
             gap: 1.5
           }}
         >
-          {messages.length === 0 && (
+          {!currentUser ? (
+            renderLoginPrompt()
+          ) : messages.length === 0 && (
             <Box sx={{ textAlign: 'center', py: 3 }}>
               <AIIcon sx={{ fontSize: 32, color: 'text.secondary', mb: 1 }} />
               <Typography variant="subtitle1" color="text.secondary" gutterBottom sx={{ fontSize: '0.9rem' }}>
@@ -289,7 +417,7 @@ export function CopilotSidepanel({
                     key={index}
                     variant="outlined"
                     size="small"
-                    onClick={() => handlePredefinedPrompt(prompt)}
+                    onClick={() => void handlePredefinedPrompt(prompt)}
                     sx={{ 
                       textTransform: 'none', 
                       justifyContent: 'flex-start',
@@ -305,7 +433,7 @@ export function CopilotSidepanel({
             </Box>
           )}
 
-          {messages.map((message) => (
+          {currentUser && messages.map((message) => (
             <Box
               key={message.id}
               sx={{
@@ -323,8 +451,12 @@ export function CopilotSidepanel({
                   color: message.type === 'user' ? 'primary.contrastText' : 'text.primary'
                 }}
               >
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem' }}>
-                  {message.content}
+                <Typography 
+                  variant="body2" 
+                  sx={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem' }}
+                  component="div"
+                >
+                  {parseMessageContent(message.content)}
                 </Typography>
                 <Typography 
                   variant="caption" 
@@ -415,7 +547,7 @@ export function CopilotSidepanel({
             </Box>
           ))}
 
-          {isLoading && (
+          {currentUser && isLoading && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
               <Box
                 sx={{
@@ -438,70 +570,73 @@ export function CopilotSidepanel({
           <div ref={messagesEndRef} />
         </Box>
 
-        <Divider />
-
-        {/* Input */}
-        <Box sx={{ p: 1.5 }}>
-          <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap' }}>
-            {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : 
-              analysisMode ? ANALYSIS_PROMPTS : 
-              organizerInsightsMode ? ORGANIZER_INSIGHTS_PROMPTS : 
-              scheduleInsightsMode ? SCHEDULE_INSIGHTS_PROMPTS :
-              PREDEFINED_PROMPTS).slice(3).map((prompt, index) => (
-              <Chip
-                key={index}
-                label={prompt.split(' ').slice(0, 2).join(' ') + '...'}
-                size="small"
-                onClick={() => handlePredefinedPrompt(prompt)}
-                sx={{ 
-                  cursor: 'pointer',
-                  fontSize: '0.65rem',
-                  height: 24
-                }}
-              />
-            ))}
-          </Box>
-          
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <TextField
-              fullWidth
-              multiline
-              maxRows={2}
-              placeholder="Ask about your hackathon..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendMessage(inputValue)
-                }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  fontSize: '0.8rem'
-                },
-                '& .MuiOutlinedInput-input': {
-                  py: 1
-                }
-              }}
-            />
-            <Button
-              variant="contained"
-              onClick={() => handleSendMessage(inputValue)}
-              disabled={!inputValue.trim() || isLoading}
-              sx={{
-                minWidth: 36,
-                width: 36,
-                height: 36,
-                borderRadius: '8px',
-                p: 0
-              }}
-            >
-              <SendIcon fontSize="small" />
-            </Button>
-          </Box>
-        </Box>
+        {currentUser && (
+          <>
+            <Divider />
+            {/* Input */}
+            <Box sx={{ p: 1.5 }}>
+              <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap' }}>
+                {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : 
+                  analysisMode ? ANALYSIS_PROMPTS : 
+                  organizerInsightsMode ? ORGANIZER_INSIGHTS_PROMPTS : 
+                  scheduleInsightsMode ? SCHEDULE_INSIGHTS_PROMPTS :
+                  PREDEFINED_PROMPTS).slice(3).map((prompt, index) => (
+                  <Chip
+                    key={index}
+                    label={prompt.split(' ').slice(0, 2).join(' ') + '...'}
+                    size="small"
+                    onClick={() => void handlePredefinedPrompt(prompt)}
+                    sx={{ 
+                      cursor: 'pointer',
+                      fontSize: '0.65rem',
+                      height: 24
+                    }}
+                  />
+                ))}
+              </Box>
+              
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  maxRows={2}
+                  placeholder="Ask about your hackathon..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      void handleSendMessage(inputValue)
+                    }
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px',
+                      fontSize: '0.8rem'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      py: 1
+                    }
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  onClick={() => void handleSendMessage(inputValue)}
+                  disabled={!inputValue.trim() || isLoading}
+                  sx={{
+                    minWidth: 36,
+                    width: 36,
+                    height: 36,
+                    borderRadius: '8px',
+                    p: 0
+                  }}
+                >
+                  <SendIcon fontSize="small" />
+                </Button>
+              </Box>
+            </Box>
+          </>
+        )}
       </Paper>
     </Slide>
   )

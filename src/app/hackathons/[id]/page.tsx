@@ -635,6 +635,7 @@ export default function PublicHackathonPage() {
         onApplySuggestions={handleApplySuggestions}
         formContext={hackathon}
         analysisMode={analysisMode}
+        currentUser={user}
       />
     </Box>
   )
