@@ -43,6 +43,13 @@ interface CopilotSidepanelProps {
   formContext: any
   posterGenerationMode?: boolean
   analysisMode?: boolean
+  organizerInsightsMode?: boolean
+  analyticsInsightsMode?: boolean
+  participantInsightsMode?: boolean
+  reportsInsightsMode?: boolean
+  scheduleInsightsMode?: boolean
+  deepInsightsMode?: boolean
+  editMode?: boolean
 }
 
 const PREDEFINED_PROMPTS = [
@@ -74,13 +81,46 @@ const ANALYSIS_PROMPTS = [
   "Suggest similar hackathons or competitions I should consider"
 ]
 
+const ORGANIZER_INSIGHTS_PROMPTS = [
+  "Analyze my hackathon performance and suggest improvements for future events",
+  "How can I increase participant engagement and retention in my hackathons?",
+  "What are the current trends in hackathon themes and formats I should consider?",
+  "Suggest marketing strategies to attract more diverse participants to my events",
+  "Help me optimize my hackathon timeline and schedule for better outcomes",
+  "What prize structures and incentives work best for different types of hackathons?",
+  "How can I improve my judging process and criteria for fairer evaluation?",
+  "Suggest ways to build a community around my hackathon events",
+  "What partnerships and sponsorships should I pursue for my next hackathon?",
+  "Help me identify potential risks and challenges in my upcoming hackathons"
+]
+
+const SCHEDULE_INSIGHTS_PROMPTS = [
+  "Optimize my hackathon timeline for maximum participant engagement",
+  "What's the ideal schedule structure for a 48-hour hackathon?",
+  "Suggest workshop timing and topics that would benefit participants most",
+  "How can I schedule events to accommodate different time zones effectively?",
+  "What are the best practices for hackathon kick-off and closing ceremonies?",
+  "Help me plan mentor availability and one-on-one session scheduling",
+  "Suggest break times and meal schedules for optimal productivity",
+  "How should I structure judging periods and presentation schedules?",
+  "What buffer time should I include for technical difficulties or delays?",
+  "Help me create a schedule template for future hackathons"
+]
+
 export function CopilotSidepanel({ 
   isOpen, 
   onClose, 
   onApplySuggestions, 
   formContext,
   posterGenerationMode = false,
-  analysisMode = false
+  analysisMode = false,
+  organizerInsightsMode = false,
+  analyticsInsightsMode = false,
+  participantInsightsMode = false,
+  reportsInsightsMode = false,
+  scheduleInsightsMode = false,
+  deepInsightsMode = false,
+  editMode = false
 }: CopilotSidepanelProps) {
   const [messages, setMessages] = useState<CopilotMessage[]>([])
   const [inputValue, setInputValue] = useState('')
@@ -233,10 +273,16 @@ export function CopilotSidepanel({
               </Typography>
               
               <Typography variant="caption" sx={{ mb: 1.5, fontWeight: 600, display: 'block' }}>
-                {posterGenerationMode ? 'Poster generation examples:' : analysisMode ? 'Analysis examples:' : 'Quick examples:'}
+                {posterGenerationMode ? 'Poster generation examples:' : 
+                 analysisMode ? 'Analysis examples:' : 
+                 organizerInsightsMode ? 'Organizer insights examples:' : 
+                 'Quick examples:'}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : analysisMode ? ANALYSIS_PROMPTS : PREDEFINED_PROMPTS).slice(0, 3).map((prompt, index) => (
+                {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : 
+                  analysisMode ? ANALYSIS_PROMPTS : 
+                  organizerInsightsMode ? ORGANIZER_INSIGHTS_PROMPTS : 
+                  PREDEFINED_PROMPTS).slice(0, 3).map((prompt, index) => (
                   <Button
                     key={index}
                     variant="outlined"
@@ -395,7 +441,10 @@ export function CopilotSidepanel({
         {/* Input */}
         <Box sx={{ p: 1.5 }}>
           <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap' }}>
-            {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : analysisMode ? ANALYSIS_PROMPTS : PREDEFINED_PROMPTS).slice(3).map((prompt, index) => (
+            {(posterGenerationMode ? POSTER_GENERATION_PROMPTS : 
+              analysisMode ? ANALYSIS_PROMPTS : 
+              organizerInsightsMode ? ORGANIZER_INSIGHTS_PROMPTS : 
+              PREDEFINED_PROMPTS).slice(3).map((prompt, index) => (
               <Chip
                 key={index}
                 label={prompt.split(' ').slice(0, 2).join(' ') + '...'}
