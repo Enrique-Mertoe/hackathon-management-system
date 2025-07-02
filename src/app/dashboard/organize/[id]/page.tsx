@@ -410,9 +410,9 @@ export default function OrganizeHackathonPage() {
                 <Grid size={12}>
                   <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
                     <CardMedia
-                        //@ts-ignore
                       component="img"
                       height={{ xs: 150, sm: 200, md: 250 }}
+                        //@ts-ignore
                       image={hackathon.poster_url}
                       alt="Hackathon Poster"
                       sx={{ objectFit: 'cover' }}
