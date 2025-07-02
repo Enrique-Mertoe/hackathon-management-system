@@ -9,6 +9,7 @@ import NavLanding from "@/components/layout/navbar/NavLanding";
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { theme } from '@/lib/theme';
+import { CacheProvider } from '@/lib/cache';
 
 interface ClientLayoutProps {
     children: React.ReactNode
@@ -23,40 +24,47 @@ export function ClientLayout({children}: ClientLayoutProps) {
         setIsDrawerOpen(!isDrawerOpen)
     }
 
+    const canHaveHeader =()=>{
+        return pathname.startsWith("/dashboard") ||
+            pathname.startsWith("/hackathons")
+    }
+
     const closeDrawer = () => {
         setIsDrawerOpen(false)
     }
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={"flex w-full h-screen overflow-y-hidden flex-col sm:h-auto"}>
-                {
-                    pathname.startsWith("/dashboard") ? (
-                        <Navbar onMenuClick={toggleDrawer}/>
-                    ) : (
-                        <NavLanding/>
-                    )
-                }
-                <div className="flex flex-grow w-full p-0 overflow-y-auto sm:flex-row flex-col bg-[#f5f6fa]">
+        <CacheProvider>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <div className={"flex w-full h-screen overflow-y-hidden flex-col sm:h-auto"}>
                     {
-                        pathname.startsWith("/dashboard") ? (
-                                <>
-                                    <Drawer isOpen={isDrawerOpen} onClose={closeDrawer}/>
-                                    <main className="flex-1 sm:pt-20 w-full px-[1px] overflow-auto sm:pl-[6rem] ">
+                        canHaveHeader() ? (
+                            <Navbar onMenuClick={toggleDrawer}/>
+                        ) : (
+                            <NavLanding/>
+                        )
+                    }
+                    <div className="flex flex-grow w-full p-0 overflow-y-auto sm:flex-row flex-col bg-[#f5f6fa]">
+                        {
+                            pathname.startsWith("/dashboard") ? (
+                                    <>
+                                        <Drawer isOpen={isDrawerOpen} onClose={closeDrawer}/>
+                                        <main className="flex-1 sm:pt-20 w-full px-[1px] overflow-auto sm:pl-[6rem] ">
+                                            {children}
+                                        </main>
+                                    </>
+                                ) :
+                                (
+                                    <main className="flex-1">
                                         {children}
                                     </main>
-                                </>
-                            ) :
-                            (
-                                <main className="flex-1">
-                                    {children}
-                                </main>
-                            )
-                    }
+                                )
+                        }
+                    </div>
+                    {/*{!nofooter && <Footer/>}*/}
                 </div>
-                {/*{!nofooter && <Footer/>}*/}
-            </div>
-        </ThemeProvider>
+            </ThemeProvider>
+        </CacheProvider>
     )
 }

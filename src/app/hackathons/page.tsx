@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { usePageCache } from '@/lib/cache'
 
 interface Hackathon {
   id: string
@@ -29,18 +30,28 @@ interface Hackathon {
 }
 
 export default function HackathonsPage() {
-  const [hackathons, setHackathons] = useState<Hackathon[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [difficultyFilter, setDifficultyFilter] = useState('')
 
-  useEffect(() => {
-    fetchHackathons()
-  }, [searchTerm, statusFilter, difficultyFilter])
+  // Create cache parameters
+  const cacheParams = {
+    search: searchTerm || undefined,
+    status: statusFilter || undefined,
+    difficulty: difficultyFilter || undefined
+  }
 
-  const fetchHackathons = async () => {
-    try {
+  // Use page cache with stale-while-revalidate
+  const { 
+    data: hackathons = [], 
+    loading, 
+    error, 
+    isStale, 
+    mutate 
+  } = usePageCache<Hackathon[]>(
+    '/hackathons',
+    cacheParams,
+    async () => {
       const params = new URLSearchParams()
       if (searchTerm) params.append('search', searchTerm)
       if (statusFilter) params.append('status', statusFilter)
@@ -49,17 +60,17 @@ export default function HackathonsPage() {
       const response = await fetch(`/api/hackathons?${params.toString()}`)
       const data = await response.json()
 
-      if (response.ok) {
-        setHackathons(data.hackathons || [])
-      } else {
-        console.error('Error fetching hackathons:', data.error)
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch hackathons')
       }
-    } catch (error) {
-      console.error('Error fetching hackathons:', error)
-    } finally {
-      setLoading(false)
+
+      return data.hackathons || []
+    },
+    {
+      ttl: 5 * 60 * 1000, // 5 minutes
+      staleTime: 30 * 1000, // 30 seconds
     }
-  }
+  )
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -99,7 +110,7 @@ export default function HackathonsPage() {
     })
   }
 
-  if (loading) {
+  if (loading && (!hackathons || hackathons.length === 0)) {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -115,12 +126,42 @@ export default function HackathonsPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Discover Hackathons
-          </h1>
-          <p className="text-muted-foreground">
-            Find the perfect hackathon to showcase your skills and build amazing projects
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                Discover Hackathons
+              </h1>
+              <p className="text-muted-foreground">
+                Find the perfect hackathon to showcase your skills and build amazing projects
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isStale && (
+                <div className="flex items-center gap-1 text-amber-600 text-sm">
+                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                  <span>Updating...</span>
+                </div>
+              )}
+              {loading && hackathons && hackathons.length > 0 && (
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => mutate()}
+                disabled={loading}
+              >
+                Refresh
+              </Button>
+            </div>
+          </div>
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-700 text-sm">
+                Error loading hackathons: {error.message}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Filters */}
@@ -157,7 +198,7 @@ export default function HackathonsPage() {
         </div>
 
         {/* Hackathons Grid */}
-        {hackathons.length === 0 ? (
+        {!hackathons || hackathons.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <h3 className="text-lg font-semibold mb-2">No hackathons found</h3>

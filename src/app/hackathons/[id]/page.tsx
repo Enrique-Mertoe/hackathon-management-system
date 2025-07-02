@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { usePageCache } from '@/lib/cache'
 import {
   Box,
   Button,
@@ -32,7 +33,9 @@ import {
   AccessTime as TimeIcon,
   People as ParticipantsIcon,
   Share as ShareIcon,
-  BookmarkBorder as BookmarkIcon
+  BookmarkBorder as BookmarkIcon,
+  Refresh as RefreshIcon,
+  Update as UpdateIcon
 } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
@@ -74,12 +77,39 @@ export default function PublicHackathonPage() {
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'))
   
   const [user, setUser] = useState<AuthUser | null>(null)
-  const [hackathon, setHackathon] = useState<Hackathon | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [copilotOpen, setCopilotOpen] = useState(false)
   const [analysisMode, setAnalysisMode] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
+
+  // Use page cache for hackathon data
+  const { 
+    data: hackathon, 
+    loading, 
+    error, 
+    isStale, 
+    mutate 
+  } = usePageCache<Hackathon>(
+    `/hackathons/${params.id}`,
+    undefined, // No additional parameters for detail pages
+    async () => {
+      if (!params.id) throw new Error('No hackathon ID provided')
+
+      const response = await fetch(`/api/hackathons/${params.id}`)
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Hackathon not found')
+        } else {
+          throw new Error('Failed to load hackathon')
+        }
+      }
+      
+      return await response.json()
+    },
+    {
+      ttl: 10 * 60 * 1000, // 10 minutes for detail pages (longer since they change less frequently)
+      staleTime: 2 * 60 * 1000, // 2 minutes stale time for details
+    }
+  )
 
   useEffect(() => {
     const getUser = async () => {
@@ -93,34 +123,6 @@ export default function PublicHackathonPage() {
 
     getUser()
   }, [])
-
-  useEffect(() => {
-    const fetchHackathon = async () => {
-      if (!params.id) return
-
-      try {
-        const response = await fetch(`/api/hackathons/${params.id}`)
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError('Hackathon not found')
-          } else {
-            setError('Failed to load hackathon')
-          }
-          return
-        }
-        
-        const data = await response.json()
-        setHackathon(data)
-      } catch (error) {
-        console.error('Error fetching hackathon:', error)
-        setError('Failed to load hackathon')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchHackathon()
-  }, [params.id])
 
   const handleAnalyzeWithAI = () => {
     setAnalysisMode(true)
@@ -189,7 +191,7 @@ export default function PublicHackathonPage() {
     return hackathon.status === 'REGISTRATION_OPEN' && !isRegistered
   }
 
-  if (loading) {
+  if (loading && !hackathon) {
     return (
       <Box
         sx={{
@@ -205,7 +207,7 @@ export default function PublicHackathonPage() {
     )
   }
 
-  if (error || !hackathon) {
+  if (error && !hackathon) {
     return (
       <Box
         sx={{
@@ -222,19 +224,32 @@ export default function PublicHackathonPage() {
               Error
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              {error}
+              {error?.message || 'Failed to load hackathon'}
             </Typography>
-            <Button
-              variant="contained"
-              onClick={() => router.push('/hackathons')}
-              startIcon={<BackIcon />}
-            >
-              Back to Hackathons
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+              <Button
+                variant="outlined"
+                onClick={() => mutate()}
+                startIcon={<RefreshIcon />}
+              >
+                Retry
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => router.push('/hackathons')}
+                startIcon={<BackIcon />}
+              >
+                Back to Hackathons
+              </Button>
+            </Box>
           </CardContent>
         </Card>
       </Box>
     )
+  }
+
+  if (!hackathon) {
+    return null
   }
 
   return (
@@ -242,15 +257,43 @@ export default function PublicHackathonPage() {
       <Container maxWidth="xl" sx={{ py: { xs: 1, sm: 2, md: 3 }, px: { xs: 1, sm: 2 } }}>
         {/* Header */}
         <Box sx={{ mb: { xs: 2, md: 3 } }}>
-          <Button
-            variant="text"
-            startIcon={<BackIcon />}
-            onClick={() => router.push('/hackathons')}
-            sx={{ mb: { xs: 1, md: 2 } }}
-            size={isSmall ? "small" : "medium"}
-          >
-            Back to Hackathons
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1, md: 2 } }}>
+            <Button
+              variant="text"
+              startIcon={<BackIcon />}
+              onClick={() => router.back()}
+              size={isSmall ? "small" : "medium"}
+            >
+              Back
+            </Button>
+            
+            {/* Cache Status Indicators */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {isStale && (
+                <Tooltip title="Data is being updated in the background">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <UpdateIcon sx={{ fontSize: 16, color: 'warning.main', animation: 'pulse 2s infinite' }} />
+                    <Typography variant="caption" color="warning.main">
+                      Updating
+                    </Typography>
+                  </Box>
+                </Tooltip>
+              )}
+              {loading && hackathon && (
+                <CircularProgress size={16} thickness={4} />
+              )}
+              <Tooltip title="Refresh hackathon data">
+                <IconButton
+                  onClick={() => mutate()}
+                  disabled={loading}
+                  size="small"
+                  sx={{ opacity: 0.7, '&:hover': { opacity: 1 } }}
+                >
+                  <RefreshIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
           
           <Box sx={{ 
             display: 'flex', 
