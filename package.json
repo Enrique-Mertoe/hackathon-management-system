@@ -18,6 +18,8 @@
     "@mui/material": "^7.2.0",
     "@mui/styled-engine-sc": "^7.2.0",
     "@mui/x-date-pickers": "^8.6.0",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.4.0",
     "@supabase/auth-helpers-nextjs": "^0.8.7",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.2",
@@ -32,6 +34,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.48.2",
+    "stripe": "^18.3.0",
     "styled-components": "^6.1.19",
     "tailwind-merge": "^2.2.0",
     "zod": "^3.22.4"

@@ -100,6 +100,15 @@ The redesigned hackathon details page features small cards with shadows, poster 
 
 <div style="margin: 20px 0;">
 
+### AI-Powered Hackathon Analysis
+![HackAI Analysis & Tech Recommendations](screenshots/hack-analyse.png)
+
+HackAI provides intelligent hackathon analysis with personalized recommendations for tech stack selection, skill assessment, and participation strategies. The AI assistant analyzes hackathon requirements and suggests optimal technologies, identifies skill gaps, and provides preparation timelines to maximize participants' success potential.
+
+</div>
+
+<div style="margin: 20px 0;">
+
 ### Responsive Design & Mobile Experience
 ![Responsive Design Across Devices](screenshots/responsive.png)
 

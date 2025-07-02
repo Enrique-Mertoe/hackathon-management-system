@@ -216,7 +216,7 @@ export default function OrganizePage() {
               <p className="text-muted-foreground mb-4">
                 Create your first hackathon to get started with organizing amazing events.
               </p>
-              <Link href="/organize/create">
+              <Link href="/dashboard/organize/create">
                 <Button>Create Your First Hackathon</Button>
               </Link>
             </CardContent>
@@ -277,7 +277,7 @@ export default function OrganizePage() {
                     </div>
 
                     <div className="flex gap-2 pt-4">
-                      <Link href={`/organize/${hackathon.id}`} className="flex-1">
+                      <Link href={`/dashboard/organize/${hackathon.id}`} className="flex-1">
                         <Button variant="secondary" className="w-full">
                           Manage
                         </Button>
