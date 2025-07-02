@@ -55,7 +55,7 @@ export default function OrganizePage() {
   const fetchMyHackathons = async () => {
     try {
       // For now, we'll fetch all hackathons. In a real app, you'd filter by organization_id
-      const response = await fetch('/api/hackathons?limit=50')
+      const response = await fetch('/api/hackathons?limit=50&organise=1')
       const data = await response.json()
 
       if (response.ok) {

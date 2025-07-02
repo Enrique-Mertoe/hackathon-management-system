@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase.server'
 // PATCH /api/hackathons/[id]/publish - Publish a hackathon (change status from DRAFT to PUBLISHED)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: any
 ) {
   try {
     const user = await auth.getCurrentUser(await supabase())
@@ -18,12 +18,12 @@ export async function PATCH(
       )
     }
 
-    const hackathonId = params.id
+    const hackathonId = (await params).id;
 
     // First, check if the hackathon exists and belongs to an organizer
     const { data: existingHackathon, error: fetchError } = await supabaseAdmin
       .from('hackathons')
-      .select('id, status, organizer_id')
+      .select('id, status, organization_id')
       .eq('id', hackathonId)
       .single()
 
