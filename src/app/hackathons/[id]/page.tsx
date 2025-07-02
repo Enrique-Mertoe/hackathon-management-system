@@ -361,7 +361,8 @@ export default function PublicHackathonPage() {
                     <CardMedia
                         //@ts-ignore
                       component="img"
-                      height={{ xs: 200, sm: 300, md: 400 }}
+                      // height={{ xs: 200, sm: 300, md: 400 }}
+                      height={"150"}
                       image={hackathon.poster_url}
                       alt="Hackathon Poster"
                       sx={{ objectFit: 'cover' }}
