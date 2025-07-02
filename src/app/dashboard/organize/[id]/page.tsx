@@ -17,7 +17,9 @@ import {
   Tooltip,
   CircularProgress,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Alert,
+  AlertTitle
 } from '@mui/material'
 import {
   AutoAwesome as AIIcon,
@@ -31,7 +33,8 @@ import {
   AccessTime as TimeIcon,
   People as ParticipantsIcon,
   Assessment as AnalyticsIcon,
-  Announcement as AnnouncementIcon
+  Announcement as AnnouncementIcon,
+  Publish as PublishIcon
 } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
@@ -79,6 +82,7 @@ export default function OrganizeHackathonPage() {
   const [error, setError] = useState<string | null>(null)
   const [copilotOpen, setCopilotOpen] = useState(false)
   const [analysisMode, setAnalysisMode] = useState(false)
+  const [publishing, setPublishing] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -157,6 +161,32 @@ export default function OrganizeHackathonPage() {
 
   const handleAnalytics = () => {
     router.push(`/dashboard/analytics?hackathon=${hackathon?.id}`)
+  }
+
+  const handlePublish = async () => {
+    if (!hackathon) return
+    
+    setPublishing(true)
+    try {
+      const response = await fetch(`/api/hackathons/${hackathon.id}/publish`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        setHackathon(prev => prev ? { ...prev, status: 'PUBLISHED' } : null)
+      } else {
+        const data = await response.json()
+        setError(data.error || 'Failed to publish hackathon')
+      }
+    } catch (error) {
+      console.error('Error publishing hackathon:', error)
+      setError('Failed to publish hackathon')
+    } finally {
+      setPublishing(false)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -347,6 +377,29 @@ export default function OrganizeHackathonPage() {
             </Box>
           </Box>
         </Box>
+
+        {/* Draft Status Alert */}
+        {hackathon.status === 'DRAFT' && (
+          <Alert 
+            severity="warning" 
+            sx={{ mb: { xs: 2, md: 3 }, borderRadius: 2 }}
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<PublishIcon />}
+                onClick={handlePublish}
+                disabled={publishing}
+                sx={{ ml: 1 }}
+              >
+                {publishing ? 'Publishing...' : 'Publish'}
+              </Button>
+            }
+          >
+            <AlertTitle>This hackathon is in draft mode</AlertTitle>
+            Your hackathon is currently saved as a draft and is not visible to participants. Click "Publish" to make it discoverable on the platform.
+          </Alert>
+        )}
 
         <Grid container spacing={{ xs: 2, md: 3 }}>
           {/* Main Content - Left Side */}

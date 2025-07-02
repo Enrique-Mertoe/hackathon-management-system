@@ -33,7 +33,7 @@ import {
   Announcement as AnnouncementIcon,
   Add as AddIcon,
   Schedule as ScheduleIcon,
-  Priority as PriorityIcon,
+  PriorityHigh as PriorityIcon,
   Visibility as ViewIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,

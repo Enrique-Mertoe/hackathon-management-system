@@ -359,6 +359,7 @@ export default function PublicHackathonPage() {
                 <Grid size={12}>
                   <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
                     <CardMedia
+                        //@ts-ignore
                       component="img"
                       height={{ xs: 200, sm: 300, md: 400 }}
                       image={hackathon.poster_url}
