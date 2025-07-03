@@ -433,6 +433,7 @@ export default function ReportsPage() {
           setCopilotOpen(false)
           setReportsInsightsMode(false)
         }}
+        currentUser={user}
         onApplySuggestions={handleApplySuggestions}
         formContext={{ user, reportData }}
         reportsInsightsMode={reportsInsightsMode}

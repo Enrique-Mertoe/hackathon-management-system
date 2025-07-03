@@ -453,6 +453,7 @@ export default function ParticipantsPage() {
           setCopilotOpen(false)
           setParticipantInsightsMode(false)
         }}
+        currentUser={user}
         onApplySuggestions={handleApplySuggestions}
         formContext={{ user, participants, filteredParticipants }}
         participantInsightsMode={participantInsightsMode}

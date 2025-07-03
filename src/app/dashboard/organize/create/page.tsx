@@ -1088,6 +1088,7 @@ export default function CreateHackathonPage() {
                         setCopilotOpen(false)
                         setPosterGenerationMode(false)
                     }}
+                    currentUser={user}
                     onApplySuggestions={handleApplySuggestions}
                     formContext={formData}
                     posterGenerationMode={posterGenerationMode}

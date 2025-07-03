@@ -353,6 +353,7 @@ export default function AnalyticsPage() {
           setCopilotOpen(false)
           setAnalyticsInsightsMode(false)
         }}
+        currentUser={user}
         onApplySuggestions={handleApplySuggestions}
         formContext={{ user, analytics }}
         analyticsInsightsMode={analyticsInsightsMode}

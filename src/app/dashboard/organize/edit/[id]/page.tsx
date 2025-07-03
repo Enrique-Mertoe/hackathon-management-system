@@ -637,6 +637,7 @@ export default function EditHackathonPage() {
           setCopilotOpen(false)
           setEditMode(false)
         }}
+        currentUser={user}
         onApplySuggestions={handleApplySuggestions}
         formContext={formData}
         editMode={editMode}

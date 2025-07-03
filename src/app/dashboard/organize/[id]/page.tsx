@@ -1094,6 +1094,7 @@ export default function OrganizeHackathonPage() {
                     setCopilotOpen(false)
                     setAnalysisMode(false)
                 }}
+                currentUser={user}
                 onApplySuggestions={handleApplySuggestions}
                 formContext={hackathon}
                 analysisMode={analysisMode}

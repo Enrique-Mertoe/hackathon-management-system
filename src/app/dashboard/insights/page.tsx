@@ -538,6 +538,7 @@ export default function InsightsPage() {
           setCopilotOpen(false)
           setDeepInsightsMode(false)
         }}
+        currentUser={user}
         onApplySuggestions={handleApplySuggestions}
         formContext={{ user, insightData }}
         deepInsightsMode={deepInsightsMode}

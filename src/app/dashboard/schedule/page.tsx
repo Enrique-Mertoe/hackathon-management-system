@@ -519,6 +519,7 @@ export default function SchedulePage() {
           setCopilotOpen(false)
           setScheduleInsightsMode(false)
         }}
+        currentUser={user}
         onApplySuggestions={handleApplySuggestions}
         formContext={{ user, scheduleEvents, upcomingEvents }}
         scheduleInsightsMode={scheduleInsightsMode}
