@@ -163,8 +163,8 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
       {/* Welcome Header */}
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
         <Box>
-          <Typography variant="h3" component="h1" fontWeight="bold" gutterBottom>
-            Welcome back, {user.email}!
+          <Typography variant="h6" component="h6" fontWeight="bold" gutterBottom>
+            Welcome back, {user.full_name}!
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Manage your hackathons and inspire innovation
@@ -194,9 +194,9 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
       {/* Quick Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
-            <CardContent sx={{ p: 3, textAlign: 'center' }}>
-              <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48, mx: 'auto', mb: 2 }}>
+          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+            <CardContent sx={{ p: 1, textAlign: 'center' }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48, mx: 'auto', mb: 1 }}>
                 <EventIcon />
               </Avatar>
               <Typography variant="h4" fontWeight="bold" color="primary.main">
@@ -210,9 +210,9 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
-            <CardContent sx={{ p: 3, textAlign: 'center' }}>
-              <Avatar sx={{ bgcolor: 'success.main', width: 48, height: 48, mx: 'auto', mb: 2 }}>
+          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+            <CardContent sx={{ p: 1, textAlign: 'center' }}>
+              <Avatar sx={{ bgcolor: 'success.main', width: 48, height: 48, mx: 'auto', mb: 1 }}>
                 <GroupIcon />
               </Avatar>
               <Typography variant="h4" fontWeight="bold" color="success.main">
@@ -226,9 +226,9 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
-            <CardContent sx={{ p: 3, textAlign: 'center' }}>
-              <Avatar sx={{ bgcolor: 'warning.main', width: 48, height: 48, mx: 'auto', mb: 2 }}>
+          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+            <CardContent sx={{ p: 1, textAlign: 'center' }}>
+              <Avatar sx={{ bgcolor: 'warning.main', width: 48, height: 48, mx: 'auto', mb: 1 }}>
                 <TrophyIcon />
               </Avatar>
               <Typography variant="h4" fontWeight="bold" color="warning.main">
@@ -242,9 +242,9 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
-            <CardContent sx={{ p: 3, textAlign: 'center' }}>
-              <Avatar sx={{ bgcolor: 'info.main', width: 48, height: 48, mx: 'auto', mb: 2 }}>
+          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+            <CardContent sx={{ p: 1, textAlign: 'center' }}>
+              <Avatar sx={{ bgcolor: 'info.main', width: 48, height: 48, mx: 'auto', mb:1 }}>
                 <LaunchIcon />
               </Avatar>
               <Typography variant="h4" fontWeight="bold" color="info.main">
