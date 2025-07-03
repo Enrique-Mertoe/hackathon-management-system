@@ -185,6 +185,7 @@ export default function CreateHackathonPage() {
             let posterUrl = formData.poster_url
             if (posterFile) {
                 setError('Uploading poster...')
+                //@ts-ignore
                 posterUrl = await uploadPosterFile()
             }
 
