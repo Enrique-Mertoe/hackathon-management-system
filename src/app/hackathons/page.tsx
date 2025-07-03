@@ -2,9 +2,36 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import {
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  CardActions,
+  Grid,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Chip,
+  CircularProgress,
+  Alert,
+  Avatar,
+  Badge,
+  CardMedia
+} from '@mui/material'
+import {
+  Star,
+  Refresh,
+  Search,
+  CalendarToday,
+  MonetizationOn,
+  Verified,
+  Image
+} from '@mui/icons-material'
 import { usePageCache } from '@/lib/cache'
 
 interface Hackathon {
@@ -21,6 +48,7 @@ interface Hackathon {
   max_participants: number | null
   prize_pool: number | null
   featured: boolean
+  poster_url: string | null
   organizations: {
     id: string
     name: string
@@ -72,33 +100,33 @@ export default function HackathonsPage() {
     }
   )
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): 'success' | 'warning' | 'info' | 'default' => {
     switch (status) {
       case 'REGISTRATION_OPEN':
-        return 'bg-green-100 text-green-800'
+        return 'success'
       case 'REGISTRATION_CLOSED':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'warning'
       case 'ACTIVE':
-        return 'bg-blue-100 text-blue-800'
+        return 'info'
       case 'COMPLETED':
-        return 'bg-gray-100 text-gray-800'
+        return 'default'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'default'
     }
   }
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty: string): 'success' | 'warning' | 'error' | 'default' => {
     switch (difficulty) {
       case 'BEGINNER':
-        return 'bg-green-100 text-green-800'
+        return 'success'
       case 'INTERMEDIATE':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'warning'
       case 'ADVANCED':
-        return 'bg-orange-100 text-orange-800'
+        return 'warning'
       case 'EXPERT':
-        return 'bg-red-100 text-red-800'
+        return 'error'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'default'
     }
   }
 
@@ -112,189 +140,272 @@ export default function HackathonsPage() {
 
   if (loading && (!hackathons || hackathons.length === 0)) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        </div>
-      </div>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '40vh' }}>
+            <CircularProgress size={48} />
+          </Box>
+        </Container>
+      </Box>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box>
+              <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', mb: 1 }}>
                 Discover Hackathons
-              </h1>
-              <p className="text-muted-foreground">
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
                 Find the perfect hackathon to showcase your skills and build amazing projects
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {isStale && (
-                <div className="flex items-center gap-1 text-amber-600 text-sm">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-                  <span>Updating...</span>
-                </div>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box sx={{ 
+                    width: 8, 
+                    height: 8, 
+                    bgcolor: 'warning.main', 
+                    borderRadius: '50%',
+                    animation: 'pulse 2s infinite'
+                  }} />
+                  <Typography variant="body2" color="warning.main">
+                    Updating...
+                  </Typography>
+                </Box>
               )}
               {loading && hackathons && hackathons.length > 0 && (
-                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <CircularProgress size={16} />
               )}
               <Button 
-                variant="outline" 
-                size="sm" 
+                variant="outlined" 
+                size="small"
+                startIcon={<Refresh />}
                 onClick={() => mutate()}
                 disabled={loading}
               >
                 Refresh
               </Button>
-            </div>
-          </div>
+            </Box>
+          </Box>
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-700 text-sm">
-                Error loading hackathons: {error.message}
-              </p>
-            </div>
+            <Alert severity="error" sx={{ mb: 2 }}>
+              Error loading hackathons: {error.message}
+            </Alert>
           )}
-        </div>
+        </Box>
 
         {/* Filters */}
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Input
-            placeholder="Search hackathons..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <TextField
+              fullWidth
+              placeholder="Search hackathons..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              slotProps={{
+                input: {
+                  startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+                }
+              }}
+            />
+          </Grid>
           
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <option value="">All Statuses</option>
-            <option value="REGISTRATION_OPEN">Registration Open</option>
-            <option value="REGISTRATION_CLOSED">Registration Closed</option>
-            <option value="ACTIVE">Active</option>
-            <option value="COMPLETED">Completed</option>
-          </select>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="">All Statuses</MenuItem>
+                <MenuItem value="REGISTRATION_OPEN">Registration Open</MenuItem>
+                <MenuItem value="REGISTRATION_CLOSED">Registration Closed</MenuItem>
+                <MenuItem value="ACTIVE">Active</MenuItem>
+                <MenuItem value="COMPLETED">Completed</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
 
-          <select
-            value={difficultyFilter}
-            onChange={(e) => setDifficultyFilter(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <option value="">All Difficulties</option>
-            <option value="BEGINNER">Beginner</option>
-            <option value="INTERMEDIATE">Intermediate</option>
-            <option value="ADVANCED">Advanced</option>
-            <option value="EXPERT">Expert</option>
-          </select>
-        </div>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <FormControl fullWidth>
+              <InputLabel>Difficulty</InputLabel>
+              <Select
+                value={difficultyFilter}
+                label="Difficulty"
+                onChange={(e) => setDifficultyFilter(e.target.value)}
+              >
+                <MenuItem value="">All Difficulties</MenuItem>
+                <MenuItem value="BEGINNER">Beginner</MenuItem>
+                <MenuItem value="INTERMEDIATE">Intermediate</MenuItem>
+                <MenuItem value="ADVANCED">Advanced</MenuItem>
+                <MenuItem value="EXPERT">Expert</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
 
         {/* Hackathons Grid */}
         {!hackathons || hackathons.length === 0 ? (
           <Card>
-            <CardContent className="p-8 text-center">
-              <h3 className="text-lg font-semibold mb-2">No hackathons found</h3>
-              <p className="text-muted-foreground">
+            <CardContent sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="h6" sx={{ mb: 1 }}>No hackathons found</Typography>
+              <Typography variant="body2" color="text.secondary">
                 Try adjusting your search criteria or check back later for new events.
-              </p>
+              </Typography>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Grid container spacing={2}>
             {hackathons.map((hackathon) => (
-              <Card key={hackathon.id} className="h-full flex flex-col">
-                {hackathon.featured && (
-                  <div className="bg-primary text-primary-foreground px-3 py-1 text-xs font-medium rounded-t-lg">
-                    ⭐ Featured
-                  </div>
-                )}
-                
-                <CardHeader className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <CardTitle className="text-lg line-clamp-2">
+              <Grid key={hackathon.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  position: 'relative',
+                  boxShadow: 'rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px',
+                  '&:hover': {
+                    boxShadow: 'rgba(50, 50, 93, 0.35) 0px 4px 8px -1px, rgba(0, 0, 0, 0.4) 0px 2px 5px -1px'
+                  },
+                  transition: 'box-shadow 0.2s ease-in-out'
+                }}>
+                  {hackathon.featured && (
+                    <Box sx={{ 
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: '0.75rem',
+                      fontWeight: 'medium',
+                      zIndex: 2,
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}>
+                      <Star sx={{ fontSize: 12, mr: 0.5 }} />
+                      Featured
+                    </Box>
+                  )}
+                  
+                  {/* Poster Image */}
+                  {hackathon.poster_url ? (
+                    <CardMedia
+                      component="img"
+                      height="140"
+                      image={hackathon.poster_url}
+                      alt={`${hackathon.title} poster`}
+                      sx={{ objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        height: 140,
+                        bgcolor: 'grey.100',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'grey.400'
+                      }}
+                    >
+
+                      <Image sx={{ fontSize: 32 }} alt="No poster available" />
+                    </Box>
+                  )}
+                  
+                  <CardContent sx={{ flexGrow: 1, pb: 1, p: 2 }}>
+                    <Typography variant="h6" component="h3" sx={{ mb: 1.5, lineHeight: 1.2, fontSize: '1rem' }}>
                       {hackathon.title}
-                    </CardTitle>
-                  </div>
+                    </Typography>
 
-                  {/*<div className="flex gap-2 mb-3">*/}
-                  {/*  <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(hackathon.status)}`}>*/}
-                  {/*    "Level"*/}
-                  {/*  </span>*/}
-                  {/*  <span className={`px-2 py-1 text-xs rounded-full ${getDifficultyColor(hackathon.difficulty_level)}`}>*/}
-                  {/*    {hackathon.difficulty_level}*/}
-                  {/*  </span>*/}
-                  {/*</div>*/}
+                    <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap' }}>
+                      <Chip 
+                        label={hackathon.status.replace('_', ' ')}
+                        color={getStatusColor(hackathon.status)}
+                        size="small"
+                        sx={{ fontSize: '0.7rem', height: 20 }}
+                      />
+                      <Chip 
+                        label={hackathon.difficulty_level}
+                        color={getDifficultyColor(hackathon.difficulty_level)}
+                        size="small"
+                        sx={{ fontSize: '0.7rem', height: 20 }}
+                      />
+                    </Box>
 
-                  {hackathon.organizations && (
-                    <div className="flex items-center gap-2 mb-3">
-                      {hackathon.organizations.logo_url && (
-                        <img 
-                          src={hackathon.organizations.logo_url} 
-                          alt={hackathon.organizations.name}
-                          className="w-6 h-6 rounded"
-                        />
-                      )}
-                      <span className="text-sm text-muted-foreground">
-                        {hackathon.organizations.name}
-                      </span>
-                      {hackathon.organizations.verification_status === 'VERIFIED' && (
-                        <span className="text-blue-500 text-xs">✓</span>
-                      )}
-                    </div>
-                  )}
-
-                  <CardDescription className="line-clamp-3">
-                    {hackathon.description}
-                  </CardDescription>
-
-                  {hackathon.theme && (
-                    <div className="mt-2">
-                      <span className="text-sm font-medium text-primary">
-                        Theme: {hackathon.theme}
-                      </span>
-                    </div>
-                  )}
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Registration:</span>
-                      <span>{formatDate(hackathon.registration_end)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Event Date:</span>
-                      <span>{formatDate(hackathon.start_date)}</span>
-                    </div>
-                    {hackathon.prize_pool && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Prize Pool:</span>
-                        <span className="font-medium text-primary">
-                          ${hackathon.prize_pool.toLocaleString()}
-                        </span>
-                      </div>
+                    {hackathon.organizations && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                        {hackathon.organizations.logo_url && (
+                          <Avatar 
+                            src={hackathon.organizations.logo_url} 
+                            alt={hackathon.organizations.name}
+                            sx={{ width: 20, height: 20 }}
+                          />
+                        )}
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                          {hackathon.organizations.name}
+                        </Typography>
+                        {hackathon.organizations.verification_status === 'VERIFIED' && (
+                          <Verified sx={{ fontSize: 14, color: 'primary.main' }} />
+                        )}
+                      </Box>
                     )}
-                  </div>
 
-                  <Link href={`/hackathons/${hackathon.id}`}>
-                    <Button className="w-full">
-                      View Details
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: '0.85rem', lineHeight: 1.3 }}>
+                      {hackathon.description.length > 80 ? `${hackathon.description.substring(0, 80)}...` : hackathon.description}
+                    </Typography>
+
+                    {hackathon.theme && (
+                      <Typography variant="body2" color="primary.main" sx={{ fontWeight: 'medium', mb: 1.5, fontSize: '0.8rem' }}>
+                        Theme: {hackathon.theme}
+                      </Typography>
+                    )}
+
+                    <Box sx={{ mt: 'auto' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                        <CalendarToday sx={{ fontSize: 12, color: 'text.secondary' }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                          Reg: {formatDate(hackathon.registration_end)}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                        <CalendarToday sx={{ fontSize: 12, color: 'text.secondary' }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                          Event: {formatDate(hackathon.start_date)}
+                        </Typography>
+                      </Box>
+                      {hackathon.prize_pool && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                          <MonetizationOn sx={{ fontSize: 12, color: 'primary.main' }} />
+                          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 'medium', fontSize: '0.75rem' }}>
+                            ${hackathon.prize_pool.toLocaleString()}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </CardContent>
+
+                  <CardActions sx={{ p: 1.5, pt: 0 }}>
+                    <Link href={`/hackathons/${hackathon.id}`} style={{ width: '100%' }}>
+                      <Button variant="contained" fullWidth size="small">
+                        View Details
+                      </Button>
+                    </Link>
+                  </CardActions>
+                </Card>
+              </Grid>
             ))}
-          </div>
+          </Grid>
         )}
-      </div>
-    </div>
+      </Container>
+    </Box>
   )
 }

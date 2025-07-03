@@ -150,14 +150,47 @@ export default function CreateHackathonPage() {
         }))
     }
 
+    const uploadPosterFile = async (): Promise<string | null> => {
+        if (!posterFile) return null
+
+        try {
+            const formData = new FormData()
+            formData.append('file', posterFile)
+            formData.append('type', 'poster')
+
+            const uploadResponse = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+
+            if (!uploadResponse.ok) {
+                throw new Error('Failed to upload poster')
+            }
+
+            const uploadData = await uploadResponse.json()
+            return uploadData.url
+        } catch (error) {
+            console.error('Error uploading poster:', error)
+            throw new Error('Failed to upload poster file')
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError('')
 
         try {
+            // Upload poster file first if one is selected
+            let posterUrl = formData.poster_url
+            if (posterFile) {
+                setError('Uploading poster...')
+                posterUrl = await uploadPosterFile()
+            }
+
             const hackathonData = {
                 ...formData,
+                poster_url: posterUrl || '',
                 registration_start: formData.registration_start?.toISOString() || '',
                 registration_end: formData.registration_end?.toISOString() || '',
                 start_date: formData.start_date?.toISOString() || '',
@@ -170,6 +203,7 @@ export default function CreateHackathonPage() {
                 judging_criteria: formData.judging_criteria
             }
 
+            setError('Creating hackathon...')
             const response = await fetch('/api/hackathons', {
                 method: 'POST',
                 headers: {
@@ -186,7 +220,7 @@ export default function CreateHackathonPage() {
                 setError(data.error || 'Failed to create hackathon')
             }
         } catch (err) {
-            setError('An unexpected error occurred')
+            setError(err instanceof Error ? err.message : 'An unexpected error occurred')
         } finally {
             setLoading(false)
         }

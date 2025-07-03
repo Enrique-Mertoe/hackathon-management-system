@@ -2,24 +2,37 @@
 
 import React, {useState, useEffect} from 'react'
 import Link from 'next/link'
-import {useRouter} from 'next/navigation'
-import {Button} from '@/components/ui/button'
+import {AppBar, Toolbar, Button, Box, CircularProgress, useTheme, IconButton} from '@mui/material'
+import {Brightness4, Brightness7} from '@mui/icons-material'
 import {auth} from '@/lib/auth'
 import type {AuthUser} from '@/lib/auth'
+import {useAppTheme} from '@/contexts/ThemeContext'
 import ProfileDropdown from "@/components/layout/navbar/profile";
 import FloatingSearch from "@/components/layout/navbar/search";
 import Image from "next/image";
-
-const navLinClass = "rounded-full border border-orange-100 bg-orange-100 transition-all duration-200 px-6 py-1";
 
 interface NavbarProps {
     onMenuClick?: () => void
 }
 
-export const Navbar: React.FC<NavbarProps> = ({onMenuClick}) => {
+export const Navbar: React.FC<NavbarProps> = ({onMenuClick: _onMenuClick}) => {
     const [user, setUser] = useState<AuthUser | null>(null)
     const [loading, setLoading] = useState(true)
-    const router = useRouter()
+    const theme = useTheme()
+    const { mode, setMode } = useAppTheme()
+
+    const navButtonStyle = {
+        borderRadius: '20px',
+        border: `1px solid ${theme.palette.primary.light}`,
+        backgroundColor: theme.palette.primary.light,
+        color: theme.palette.primary.contrastText,
+        px: 3,
+        py: 0.5,
+        '&:hover': {
+            backgroundColor: theme.palette.primary.main,
+            border: `1px solid ${theme.palette.primary.main}`
+        }
+    }
 
     useEffect(() => {
         const getUser = async () => {
@@ -38,72 +51,78 @@ export const Navbar: React.FC<NavbarProps> = ({onMenuClick}) => {
 
 
     return (
-        <nav className="sm:fixed inset-x-0 bg-[#f5f6fa] top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
-                    <div className="flex items-center">
-                        <Link href="/" className={"flex  items-center space-x-2"}>
-                            <div className="w-8 h-8 flex items-center justify-center">
-                                <img src={"/logo-favicon.ico"} alt={"HackHub Logo"} className={""}/>
-                            </div>
-                            <div className="h-8 w-22 flex items-center justify-center">
-                                <img src={"/logo-text.png"} alt={"HackHub Logo"} className={""}/>
-                            </div>
-                        </Link>
+        <AppBar position="fixed" sx={{ backgroundColor: theme.palette.background.paper, boxShadow: 1 }}>
+            <Toolbar sx={{ maxWidth: '1280px', mx: 'auto', width: '100%', px: { xs: 2, sm: 3, lg: 4 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                    <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+                        <Box sx={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Image src="/logo-favicon.ico" alt="HackHub Logo" width={32} height={32} />
+                        </Box>
+                        <Box sx={{ height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Image src="/logo-text.png" alt="HackHub Logo" width={88} height={32} />
+                        </Box>
+                    </Link>
 
-                        <div className="hidden md:ml-10 md:flex md:space-x-2">
-                            <Link href="/hackathons"
-                                  className={`text-foreground ${navLinClass} hover:text-primary transition-colors`}>
+                    <Box sx={{ display: { xs: 'none', md: 'flex' }, ml: 5, gap: 1 }}>
+                        <Link href="/hackathons" style={{ textDecoration: 'none' }}>
+                            <Button variant="outlined" sx={navButtonStyle}>
                                 Discover
-                            </Link>
-                            {user && user.role === 'ORGANIZER' && (
-                                <Link href="/dashboard/organize"
-                                      className={`text-foreground hover:text-primary transition-colors ${navLinClass}`}>
+                            </Button>
+                        </Link>
+                        {user && user.role === 'ORGANIZER' && (
+                            <Link href="/dashboard/organize" style={{ textDecoration: 'none' }}>
+                                <Button variant="outlined" sx={navButtonStyle}>
                                     Organize
-                                </Link>
-                            )}
-                            {user && (
-                                <>
-                                    <Link href="/dashboard"
-                                          className={`text-foreground hover:text-primary transition-colors ${navLinClass}`}>
-                                        Dashboard
-                                    </Link>
-                                    <Link href="/settings"
-                                          className={`text-foreground hover:text-primary transition-colors ${navLinClass}`}>
-                                        Settings
-                                    </Link>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center space-x-4">
-                        {loading ? (
-                            <div
-                                className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        ) : user ? (''
-                        ) : (
-                            <div className="flex items-center space-x-2">
-                                <Link href="/auth/signin">
-                                    <Button variant="ghost" size="sm">
-                                        Sign In
-                                    </Button>
-                                </Link>
-                                <Link href="/auth/signup">
-                                    <Button size="sm">
-                                        Sign Up
-                                    </Button>
-                                </Link>
-                            </div>
+                                </Button>
+                            </Link>
                         )}
-                    </div>
+                        {user && (
+                            <>
+                                <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+                                    <Button variant="outlined" sx={navButtonStyle}>
+                                        Dashboard
+                                    </Button>
+                                </Link>
+                                <Link href="/dashboard/settings" style={{ textDecoration: 'none' }}>
+                                    <Button variant="outlined" sx={navButtonStyle}>
+                                        Settings
+                                    </Button>
+                                </Link>
+                            </>
+                        )}
+                    </Box>
+                </Box>
 
-                    <div className={"flex items-center space-x-2 "}>
-                        <FloatingSearch/>
-                        <ProfileDropdown user={user} isLoading={!user || loading}/>
-                    </div>
-                </div>
-            </div>
-        </nav>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {loading ? (
+                        <CircularProgress size={24} sx={{ color: theme.palette.primary.main }} />
+                    ) : user ? null : (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Link href="/auth/signin" style={{ textDecoration: 'none' }}>
+                                <Button variant="text" size="small" sx={{ color: theme.palette.text.primary }}>
+                                    Sign In
+                                </Button>
+                            </Link>
+                            <Link href="/auth/signup" style={{ textDecoration: 'none' }}>
+                                <Button variant="contained" size="small" sx={{ backgroundColor: theme.palette.primary.main, '&:hover': { backgroundColor: theme.palette.primary.dark } }}>
+                                    Sign Up
+                                </Button>
+                            </Link>
+                        </Box>
+                    )}
+                    
+                    <IconButton
+                        onClick={() => setMode(mode === 'light' ? 'dark' : 'light')}
+                        color="inherit"
+                        sx={{ ml: 1 }}
+                    >
+                        {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
+                    </IconButton>
+                    
+                    <FloatingSearch/>
+                    <ProfileDropdown user={user} isLoading={!user || loading}/>
+                </Box>
+            </Toolbar>
+        </AppBar>
     )
 }

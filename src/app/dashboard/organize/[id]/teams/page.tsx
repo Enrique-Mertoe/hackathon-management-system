@@ -27,10 +27,15 @@ import {
   Star as StarIcon,
   Assignment as ProjectIcon,
   Link as LinkIcon,
-  GitHub as GitHubIcon
+  GitHub as GitHubIcon,
+  AutoAwesome as AIIcon,
+  Psychology as RecommendationIcon,
+  TrendingUp as InsightIcon
 } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
+import { hackathonAI } from '@/lib/hackathon-ai-service'
+import type { HackathonInsight } from '@/lib/hackathon-ai-service'
 
 interface Team {
   id: string
@@ -64,6 +69,8 @@ export default function TeamsManagementPage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [hackathonTitle, setHackathonTitle] = useState('')
+  const [aiInsights, setAiInsights] = useState<HackathonInsight[]>([])
+  const [loadingInsights, setLoadingInsights] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -151,6 +158,31 @@ export default function TeamsManagementPage() {
       console.error('Error fetching teams:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const generateAIInsights = async () => {
+    setLoadingInsights(true)
+    try {
+      const participantData = teams.flatMap(team => team.members)
+      const hackathonDetails = {
+        theme: 'AI Innovation',
+        duration: '48 hours',
+        max_participants: 100
+      }
+      
+      const insights = await hackathonAI.analyzeHackathonInsights(
+        participantData,
+        teams,
+        [], // submissions data
+        hackathonDetails
+      )
+      
+      setAiInsights(insights)
+    } catch (error) {
+      console.error('Error generating AI insights:', error)
+    } finally {
+      setLoadingInsights(false)
     }
   }
 
@@ -269,6 +301,93 @@ export default function TeamsManagementPage() {
             </Card>
           </Grid>
         </Grid>
+
+        {/* AI Insights Section */}
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            mb: 2 
+          }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <InsightIcon color="primary" />
+              AI Team Insights
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<AIIcon />}
+              onClick={generateAIInsights}
+              disabled={loadingInsights}
+              size={isSmall ? "small" : "medium"}
+            >
+              {loadingInsights ? 'Generating...' : 'Generate Insights'}
+            </Button>
+          </Box>
+
+          {aiInsights.length > 0 && (
+            <Grid container spacing={{ xs: 1.5, md: 2 }}>
+              {aiInsights.map((insight, index) => (
+                <Grid size={{ xs: 12, md: 6 }} key={index}>
+                  <Card sx={{ boxShadow: 1, borderRadius: 2, height: '100%' }}>
+                    <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
+                        <Chip 
+                          label={insight.type.replace('_', ' ')} 
+                          size="small" 
+                          color={
+                            insight.type === 'RECOMMENDATION' ? 'primary' :
+                            insight.type === 'SKILL_GAP' ? 'warning' :
+                            insight.type === 'PARTICIPATION' ? 'info' : 'secondary'
+                          }
+                          sx={{ fontSize: '0.7rem' }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {Math.round(insight.confidence * 100)}% confidence
+                        </Typography>
+                      </Box>
+                      
+                      <Typography 
+                        variant={isSmall ? "subtitle2" : "subtitle1"} 
+                        fontWeight="bold" 
+                        gutterBottom
+                        sx={{ lineHeight: 1.3 }}
+                      >
+                        {insight.title}
+                      </Typography>
+                      
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary" 
+                        sx={{ mb: 1.5, lineHeight: 1.5 }}
+                      >
+                        {insight.description}
+                      </Typography>
+
+                      {insight.actionable_items.length > 0 && (
+                        <Box>
+                          <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                            Recommended Actions:
+                          </Typography>
+                          {insight.actionable_items.slice(0, 2).map((item, idx) => (
+                            <Typography 
+                              key={idx}
+                              variant="caption" 
+                              color="text.secondary"
+                              sx={{ display: 'block', mb: 0.3, pl: 1 }}
+                            >
+                              • {item}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Box>
 
         {/* Teams Grid */}
         <Grid container spacing={{ xs: 2, md: 3 }}>

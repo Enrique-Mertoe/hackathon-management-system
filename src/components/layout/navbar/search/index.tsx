@@ -1,6 +1,17 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {Search, X} from 'lucide-react';
 import {motion} from "framer-motion"
+import {
+    IconButton,
+    TextField,
+    Paper,
+    Box,
+    Typography,
+    Chip,
+    InputAdornment,
+    useTheme,
+    alpha
+} from '@mui/material';
 
 
 interface SearchResult {
@@ -16,6 +27,7 @@ const FloatingSearch: React.FC = () => {
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const searchRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const theme = useTheme();
 
     // Mock search data
     const mockData: SearchResult[] = [
@@ -113,127 +125,231 @@ const FloatingSearch: React.FC = () => {
 
     const getCategoryColor = (category: string) => {
         const colors = {
-            'Tutorial': 'bg-blue-100 text-blue-800',
-            'Guide': 'bg-green-100 text-green-800',
-            'Component': 'bg-purple-100 text-purple-800',
-            'Article': 'bg-orange-100 text-orange-800',
+            'Tutorial': { backgroundColor: alpha(theme.palette.info.main, 0.1), color: theme.palette.info.main },
+            'Guide': { backgroundColor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main },
+            'Component': { backgroundColor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main },
+            'Article': { backgroundColor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main },
         };
-        return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+        return colors[category as keyof typeof colors] || { backgroundColor: alpha(theme.palette.grey[500], 0.1), color: theme.palette.grey[700] };
     };
 
     return (
-        <div
+        <Box
             ref={searchRef}
-            className={`z-50 transition-all relative duration-300 ease-out ${
-                isExpanded
-                    ? 'w-96'
-                    : 'w-12 h-12'
-            }`}
+            sx={{
+                position: 'relative',
+                zIndex: 50,
+                transition: 'all 0.3s ease-out',
+                width: isExpanded ? 384 : 48,
+                height: isExpanded ? 'auto' : 48,
+            }}
         >
             {!isExpanded ? (
-                // Search Icon Button
-                <button
+                <IconButton
                     onClick={handleExpand}
-                    className="w-12 h-12 bg-orange-100 cursor-pointer rounded-full transition-all duration-200 flex items-center justify-center group hover:scale-105"
+                    sx={{
+                        width: 48,
+                        height: 48,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                        color: theme.palette.text.secondary,
+                        '&:hover': {
+                            backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                            color: theme.palette.primary.main,
+                            transform: 'scale(1.05)',
+                        },
+                        transition: 'all 0.2s ease-in-out',
+                    }}
                 >
-                    <Search className="w-5 h-5 text-gray-600 group-hover:text-orange-600 transition-colors"/>
-                </button>
+                    <Search size={20} />
+                </IconButton>
             ) : (
-                // Expanded Search Card
-                <div
-                    className="rounded-lg overflow-hidden animate-in slide-in-from-right-2 zoom-in-95 duration-300">
-                    {/* Header */}
-                    <div className="flex items-center p-4">
-                        <Search className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0"/>
-                        <input
-                            ref={inputRef}
-                            type="text"
+                <Paper
+                    elevation={3}
+                    sx={{
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        backgroundColor: theme.palette.background.paper,
+                    }}
+                >
+                    <Box sx={{ p: 2 }}>
+                        <TextField
+                            inputRef={inputRef}
+                            fullWidth
                             placeholder="Search anything..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="flex-1 outline-none text-gray-900 placeholder-gray-500"
+                            variant="outlined"
+                            size="small"
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Search size={20} color={theme.palette.text.secondary} />
+                                    </InputAdornment>
+                                ),
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={handleClose}
+                                            size="small"
+                                            sx={{ color: theme.palette.text.secondary }}
+                                        >
+                                            <X size={16} />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: 'transparent',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: 'transparent',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: 'transparent',
+                                    },
+                                },
+                            }}
                         />
-                        <button
-                            onClick={handleClose}
-                            className="p-1 hover:bg-gray-100 rounded-full transition-colors ml-2"
-                        >
-                            <X className="w-4 h-4 text-gray-500"/>
-                        </button>
-                    </div>
+                    </Box>
 
-                    {/* Results Body */}
-                    {
-                        isExpanded && (
-                            <>
-                                <motion.div
-                                    initial={{
-                                        y: 10,
-                                        opacity: 0
-                                    }}
-                                    animate={{
-                                        y: 0,
-                                        opacity: 1,
-                                    }}
-                                    transition={{delay: .1, duration: 0.2, ease: 'easeInOut'}}
-                                    className={
-                                        "absolute -z-1 top-0 inset-x-0 p-4 pt-20 bg-white border border-gray-200 rounded-xl shadow-lg"
-                                    }
-                                >
-                                    <div className="max-h-80 overflow-y-auto">
-                                        {searchQuery.trim() ? (
-                                            searchResults.length > 0 ? (
-                                                <div className="p-2">
-                                                    {searchResults.map((result) => (
-                                                        <div
-                                                            key={result.id}
-                                                            className="p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors group"
-                                                        >
-                                                            <div className="flex items-start justify-between">
-                                                                <div className="flex-1 min-w-0">
-                                                                    <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors truncate">
-                                                                        {result.title}
-                                                                    </h4>
-                                                                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                                                        {result.description}
-                                                                    </p>
-                                                                </div>
-                                                                <span
-                                                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2 flex-shrink-0 ${getCategoryColor(result.category)}`}>
-                            {result.category}
-                            </span>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="p-8 text-center">
-                                                    <div
-                                                        className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                                        <Search className="w-6 h-6 text-gray-400"/>
-                                                    </div>
-                                                    <p className="text-gray-500 text-sm">No results found for
-                                                        "{searchQuery}"</p>
-                                                </div>
-                                            )
+                    {isExpanded && (
+                        <motion.div
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.1, duration: 0.2, ease: 'easeInOut' }}
+                        >
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    zIndex: -1,
+                                    mt: 10,
+                                    p: 2,
+                                    backgroundColor: theme.palette.background.paper,
+                                    border: `1px solid ${theme.palette.divider}`,
+                                    borderRadius: 3,
+                                    boxShadow: theme.shadows[8],
+                                }}
+                            >
+                                <Box sx={{ maxHeight: 320, overflow: 'auto' }}>
+                                    {searchQuery.trim() ? (
+                                        searchResults.length > 0 ? (
+                                            <Box sx={{ p: 1 }}>
+                                                {searchResults.map((result) => (
+                                                    <Box
+                                                        key={result.id}
+                                                        sx={{
+                                                            p: 2,
+                                                            borderRadius: 2,
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s ease-in-out',
+                                                            '&:hover': {
+                                                                backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                                                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    fontWeight="medium"
+                                                                    sx={{
+                                                                        color: theme.palette.text.primary,
+                                                                        mb: 0.5,
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap',
+                                                                        '&:hover': {
+                                                                            color: theme.palette.primary.main,
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    {result.title}
+                                                                </Typography>
+                                                                <Typography
+                                                                    variant="caption"
+                                                                    sx={{
+                                                                        color: theme.palette.text.secondary,
+                                                                        display: '-webkit-box',
+                                                                        WebkitLineClamp: 2,
+                                                                        WebkitBoxOrient: 'vertical',
+                                                                        overflow: 'hidden',
+                                                                    }}
+                                                                >
+                                                                    {result.description}
+                                                                </Typography>
+                                                            </Box>
+                                                            <Chip
+                                                                label={result.category}
+                                                                size="small"
+                                                                sx={{
+                                                                    ml: 1,
+                                                                    ...getCategoryColor(result.category),
+                                                                }}
+                                                            />
+                                                        </Box>
+                                                    </Box>
+                                                ))}
+                                            </Box>
                                         ) : (
-                                            <div className="p-8 text-center">
-                                                <div
-                                                    className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                                    <Search className="w-6 h-6 text-blue-600"/>
-                                                </div>
-                                                <p className="text-gray-600 font-medium mb-1">Start searching</p>
-                                                <p className="text-gray-500 text-sm">Type to find tutorials, guides, and
-                                                    more</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            </>
-                        )
-                    }
-                </div>
+                                            <Box sx={{ p: 6, textAlign: 'center' }}>
+                                                <Box
+                                                    sx={{
+                                                        width: 48,
+                                                        height: 48,
+                                                        backgroundColor: alpha(theme.palette.grey[500], 0.1),
+                                                        borderRadius: '50%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        mx: 'auto',
+                                                        mb: 2,
+                                                    }}
+                                                >
+                                                    <Search size={24} color={theme.palette.text.secondary} />
+                                                </Box>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    No results found for "{searchQuery}"
+                                                </Typography>
+                                            </Box>
+                                        )
+                                    ) : (
+                                        <Box sx={{ p: 6, textAlign: 'center' }}>
+                                            <Box
+                                                sx={{
+                                                    width: 48,
+                                                    height: 48,
+                                                    background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)`,
+                                                    borderRadius: '50%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    mx: 'auto',
+                                                    mb: 2,
+                                                }}
+                                            >
+                                                <Search size={24} color={theme.palette.info.main} />
+                                            </Box>
+                                            <Typography variant="body2" fontWeight="medium" color="text.primary" sx={{ mb: 0.5 }}>
+                                                Start searching
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Type to find tutorials, guides, and more
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Paper>
+                        </motion.div>
+                    )}
+                </Paper>
             )}
-        </div>
+        </Box>
     );
 };
 

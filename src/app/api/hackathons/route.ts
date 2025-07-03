@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
         const organise = searchParams.get('organise')
         const featured = searchParams.get('featured')
         const search = searchParams.get('search')
+        const organizer_id = searchParams.get('organizer_id')
 
         const offset = (page - 1) * limit
 
@@ -37,6 +38,17 @@ export async function GET(request: NextRequest) {
                 {error: 'Unauthorized - Organizer role required'},
                 {status: 403}
             )
+        }
+
+        // Filter by organizer if specified (for organizer dashboard)
+        if (organizer_id) {
+            if (!user || (!auth.hasRole(user, 'ORGANIZER') && user.id !== organizer_id)) {
+                return NextResponse.json(
+                    {error: 'Unauthorized - Can only view your own hackathons'},
+                    {status: 403}
+                )
+            }
+            query = query.eq('organizer_id', organizer_id)
         }
 
         // Apply filters
@@ -134,7 +146,8 @@ export async function POST(request: NextRequest) {
             .insert({
                 ...hackathonData,
                 slug,
-                status: 'DRAFT'
+                status: 'DRAFT',
+                organizer_id: user.id // Ensure organizer_id is set to current user
             })
             .select()
             .single();

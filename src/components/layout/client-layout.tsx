@@ -6,9 +6,8 @@ import {Footer} from '@/components/layout/footer'
 import Drawer from '@/components/layout/drawer'
 import {usePathname} from "next/navigation";
 import NavLanding from "@/components/layout/navbar/NavLanding";
-import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
-import { theme } from '@/lib/theme';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ThemeBody } from '@/components/layout/theme-body';
 import { CacheProvider } from '@/lib/cache';
 
 interface ClientLayoutProps {
@@ -35,8 +34,8 @@ export function ClientLayout({children}: ClientLayoutProps) {
 
     return (
         <CacheProvider>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
+            <ThemeProvider>
+                <ThemeBody />
                 <div className={"flex w-full h-screen overflow-y-hidden flex-col sm:h-auto"}>
                     {
                         canHaveHeader() ? (
@@ -45,7 +44,7 @@ export function ClientLayout({children}: ClientLayoutProps) {
                             <NavLanding/>
                         )
                     }
-                    <div className="flex flex-grow w-full p-0 overflow-y-auto sm:flex-row flex-col bg-[#f5f6fa]">
+                    <div className="flex flex-grow w-full p-0 overflow-y-auto sm:flex-row flex-col">
                         {
                             pathname.startsWith("/dashboard") ? (
                                     <>

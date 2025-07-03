@@ -39,6 +39,8 @@ import { auth } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
 import { CopilotSidepanel } from '@/components/ai/copilot-sidepanel'
 import type { FormSuggestion } from '@/components/ai/copilot-sidepanel'
+import { hackathonAI } from '@/lib/hackathon-ai-service'
+import type { HackathonInsight } from '@/lib/hackathon-ai-service'
 
 interface AnalyticsData {
   totalViews: number

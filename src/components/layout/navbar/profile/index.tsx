@@ -1,6 +1,20 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState} from 'react';
 import {ChevronDown, User, Settings, HelpCircle, LogOut, Bell, Shield} from 'lucide-react';
 import {auth} from '@/lib/auth'
+import {
+    Avatar,
+    Box,
+    Button,
+    Chip,
+    Divider,
+    Menu,
+    MenuItem,
+    Skeleton,
+    Typography,
+    useTheme,
+    alpha,
+    Badge
+} from '@mui/material';
 
 interface ProfileDropdownProps {
     user?: any;
@@ -12,28 +26,16 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                                                              isLoading = false
                                                          }) => {
 
-    const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const theme = useTheme();
+    const isOpen = Boolean(anchorEl);
 
-    // Handle clicking outside to close
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
 
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isOpen]);
-
-    const toggleDropdown = () => {
-        setIsOpen(!isOpen);
+    const handleClose = () => {
+        setAnchorEl(null);
     };
 
     const menuItems = [
@@ -56,152 +58,219 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     };
     return (
-        <div className="relative" ref={dropdownRef}>
+        <Box>
             {isLoading ? (
                 <ProfileSkeleton/>
             ) : (
-                <button
-                    onClick={toggleDropdown}
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
+                <Button
+                    onClick={handleClick}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        p: 1,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        color: theme.palette.text.primary,
+                        '&:hover': {
+                            backgroundColor: alpha(theme.palette.action.hover, 0.04),
+                        },
+                        transition: 'all 0.2s ease-in-out',
+                    }}
                 >
-                    {/* Avatar */}
-                    <div className="relative">
-                        {user.avatar ? (
-                            <img
-                                src={user.avatar}
-                                alt={user.username}
-                                className="w-8 h-8 rounded-full object-cover ring-2 ring-gray-100"
+                    <Badge
+                        overlap="circular"
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                        badgeContent={
+                            <Box
+                                sx={{
+                                    width: 12,
+                                    height: 12,
+                                    backgroundColor: theme.palette.success.main,
+                                    borderRadius: '50%',
+                                    border: `2px solid ${theme.palette.background.paper}`,
+                                }}
                             />
-                        ) : (
-                            <div
-                                className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
-                        {getInitials(user.username)}
-                      </span>
-                            </div>
-                        )}
-                        <div
-                            className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
-                    </div>
+                        }
+                    >
+                        <Avatar
+                            src={user?.avatar}
+                            sx={{
+                                width: 32,
+                                height: 32,
+                                background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                                fontSize: '0.875rem',
+                                fontWeight: 500,
+                            }}
+                        >
+                            {getInitials(user?.username || '')}
+                        </Avatar>
+                    </Badge>
 
-                    {/* Name */}
-                    <div className="hidden sm:block text-left">
-                        <p className="text-sm font-medium text-gray-900 group-hover:text-gray-700">
-                            {user.username.split(' ')[0]}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                            {user.role}
-                        </p>
-                    </div>
+                    <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
+                        <Typography variant="body2" fontWeight="medium" color="text.primary">
+                            {user?.username?.split(' ')[0]}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {user?.role}
+                        </Typography>
+                    </Box>
 
-                    {/* Chevron */}
                     <ChevronDown
-                        className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
-                            isOpen ? 'rotate-180' : 'rotate-0'
-                        }`}
+                        size={16}
+                        style={{
+                            color: theme.palette.text.secondary,
+                            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                            transition: 'transform 0.2s ease-in-out',
+                        }}
                     />
-                </button>
+                </Button>
             )}
 
-            {/* Dropdown */}
-            {!isLoading && (
-                <div
-                    className={`absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-200 origin-top-right z-50 ${
-                        isOpen
-                            ? 'opacity-100 scale-100 translate-y-0'
-                            : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
-                    }`}>
-                    {/* User Info Header */}
-                    <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                        <div className="flex items-center space-x-3">
-                            {user.avatar ? (
-                                <img
-                                    src={user.avatar}
-                                    alt={user.username}
-                                    className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm"
+            <Menu
+                anchorEl={anchorEl}
+                open={isOpen}
+                onClose={handleClose}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                slotProps={{
+                    paper: {
+                        sx: {
+                            width: 288,
+                            mt: 1,
+                            borderRadius: 3,
+                            boxShadow: theme.shadows[8],
+                            border: `1px solid ${theme.palette.divider}`,
+                            overflow: 'visible',
+                        },
+                    }
+                }}
+            >
+                <Box sx={{ p: 2, backgroundColor: alpha(theme.palette.action.hover, 0.02) }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Avatar
+                            src={user?.avatar}
+                            sx={{
+                                width: 48,
+                                height: 48,
+                                background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                                fontSize: '1rem',
+                                fontWeight: 500,
+                            }}
+                        >
+                            {getInitials(user?.username || '')}
+                        </Avatar>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography variant="body2" fontWeight="medium" color="text.primary" noWrap>
+                                {user?.username}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" noWrap>
+                                {user?.email}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                                <Box
+                                    sx={{
+                                        width: 8,
+                                        height: 8,
+                                        backgroundColor: theme.palette.success.main,
+                                        borderRadius: '50%',
+                                        mr: 1,
+                                    }}
                                 />
-                            ) : (
-                                <div
-                                    className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium">
-                          {getInitials(user.username)}
-                        </span>
-                                </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-900 truncate">{user.username}</p>
-                                <p className="text-sm text-gray-600 truncate">{user.email}</p>
-                                <div className="flex items-center mt-1">
-                                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                                    <span className="text-xs text-gray-500">Online</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                <Typography variant="caption" color="text.secondary">
+                                    Online
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+                </Box>
 
-                    {/* Menu Items */}
-                    <div className="py-2">
-                        {menuItems.map((item, index) => (
-                            <button
-                                key={index}
-                                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors group"
-                            >
-                                <div className="flex items-center space-x-3">
-                                    <item.icon className="w-4 h-4 text-gray-500 group-hover:text-gray-700"/>
-                                    <span className="text-sm text-gray-700 group-hover:text-gray-900">
-                          {item.label}
-                        </span>
-                                    {item.badge && (
-                                        <span
-                                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            {item.badge}
-                          </span>
-                                    )}
-                                </div>
-                                {item.shortcut && (
-                                    <span className="text-xs text-gray-400 font-mono">
-                          {item.shortcut}
-                        </span>
+                <Box sx={{ py: 1 }}>
+                    {menuItems.map((item, index) => (
+                        <MenuItem
+                            key={index}
+                            onClick={handleClose}
+                            sx={{
+                                px: 2,
+                                py: 1.5,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                '&:hover': {
+                                    backgroundColor: alpha(theme.palette.action.hover, 0.04),
+                                },
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <item.icon
+                                    size={16}
+                                    color={theme.palette.text.secondary}
+                                />
+                                <Typography variant="body2" color="text.primary">
+                                    {item.label}
+                                </Typography>
+                                {item.badge && (
+                                    <Chip
+                                        label={item.badge}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: alpha(theme.palette.error.main, 0.1),
+                                            color: theme.palette.error.main,
+                                            fontSize: '0.75rem',
+                                            height: 20,
+                                        }}
+                                    />
                                 )}
-                            </button>
-                        ))}
-                    </div>
+                            </Box>
+                            {item.shortcut && (
+                                <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                                    {item.shortcut}
+                                </Typography>
+                            )}
+                        </MenuItem>
+                    ))}
+                </Box>
 
-                    {/* Divider */}
-                    <div className="border-t border-gray-200"></div>
+                <Divider />
 
-                    {/* Logout */}
-                    <div className="py-2">
-                        <button
-                            onClick={handleSignOut}
-                            className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-50 transition-colors group">
-                            <LogOut className="w-4 h-4 text-gray-500 group-hover:text-red-600"/>
-                            <span className="text-sm text-gray-700 group-hover:text-red-700">
-                      Sign out
-                    </span>
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
-
-
+                <Box sx={{ py: 1 }}>
+                    <MenuItem
+                        onClick={handleSignOut}
+                        sx={{
+                            px: 2,
+                            py: 1.5,
+                            '&:hover': {
+                                backgroundColor: alpha(theme.palette.error.main, 0.04),
+                                '& .MuiTypography-root': {
+                                    color: theme.palette.error.main,
+                                },
+                                '& svg': {
+                                    color: theme.palette.error.main,
+                                },
+                            },
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <LogOut size={16} color={theme.palette.text.secondary} />
+                            <Typography variant="body2" color="text.primary">
+                                Sign out
+                            </Typography>
+                        </Box>
+                    </MenuItem>
+                </Box>
+            </Menu>
+        </Box>
     );
 };
 const ProfileSkeleton: React.FC = () => (
-    <div className="flex items-center space-x-3 p-2 rounded-lg animate-pulse">
-        {/* Avatar Skeleton */}
-        <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-
-        {/* Name Skeleton */}
-        <div className="hidden sm:block space-y-1">
-            <div className="w-16 h-3 bg-gray-300 rounded"></div>
-            <div className="w-12 h-2 bg-gray-200 rounded"></div>
-        </div>
-
-        {/* Chevron Skeleton */}
-        <div className="w-4 h-4 bg-gray-300 rounded"></div>
-    </div>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1, borderRadius: 2 }}>
+        <Skeleton variant="circular" width={32} height={32} />
+        <Box sx={{ display: { xs: 'none', sm: 'block' }, gap: 0.5 }}>
+            <Skeleton variant="text" width={64} height={14} />
+            <Skeleton variant="text" width={48} height={10} />
+        </Box>
+        <Skeleton variant="rectangular" width={16} height={16} sx={{ borderRadius: 1 }} />
+    </Box>
 );
 
 export default ProfileDropdown;
