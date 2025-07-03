@@ -546,6 +546,7 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
           setCopilotOpen(false)
           setOrganizerInsightsMode(false)
         }}
+        currentUser={user}
         onApplySuggestions={handleApplySuggestions}
         formContext={{ user, stats, recentHackathons }}
         organizerInsightsMode={organizerInsightsMode}
