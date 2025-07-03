@@ -224,14 +224,14 @@ export default function HackathonsPage() {
                     </CardTitle>
                   </div>
 
-                  <div className="flex gap-2 mb-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(hackathon.status)}`}>
-                      {hackathon.status.replace('_', ' ')}
-                    </span>
-                    <span className={`px-2 py-1 text-xs rounded-full ${getDifficultyColor(hackathon.difficulty_level)}`}>
-                      {hackathon.difficulty_level}
-                    </span>
-                  </div>
+                  {/*<div className="flex gap-2 mb-3">*/}
+                  {/*  <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(hackathon.status)}`}>*/}
+                  {/*    "Level"*/}
+                  {/*  </span>*/}
+                  {/*  <span className={`px-2 py-1 text-xs rounded-full ${getDifficultyColor(hackathon.difficulty_level)}`}>*/}
+                  {/*    {hackathon.difficulty_level}*/}
+                  {/*  </span>*/}
+                  {/*</div>*/}
 
                   {hackathon.organizations && (
                     <div className="flex items-center gap-2 mb-3">
