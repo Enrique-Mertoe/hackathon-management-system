@@ -317,7 +317,9 @@ export default function HackathonsPage() {
                       }}
                     >
 
-                      <Image sx={{ fontSize: 32 }} alt="No poster available" />
+                      <Image
+                          //@ts-ignore
+                          sx={{ fontSize: 32 }} />
                     </Box>
                   )}
                   
