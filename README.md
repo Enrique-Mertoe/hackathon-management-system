@@ -14,6 +14,12 @@ A comprehensive platform for discovering hackathons, building teams, and advanci
 - **Achievement System**: Certificates and portfolio building
 - **Orange Theme**: Modern, responsive UI with custom orange color scheme
 
+## Demo Accounts
+- **Organiser**
+    *Email*: abutimartin778@gmail.com
+    *Pass*: 11111111
+- **Participant**: Email: mikemilla778@gmail.com, Pass:11111111
+- Or create Your Own
 ## 🛠 Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript, Material-UI (MUI)

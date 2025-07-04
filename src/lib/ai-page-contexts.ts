@@ -246,6 +246,59 @@ export const getHackathonBrowseContext = (hackathons: any[], filters: any): AIPa
   }
 })
 
+// Public Hackathon Detail Context (for participants viewing individual hackathons)
+export const getHackathonDetailContext = (hackathon: any, userData: any): AIPageContext => ({
+  page: 'hackathon-detail',
+  mode: 'insights',
+  prompts: [
+    "What tech stack would be best for this challenge?",
+    "Help me understand if I have the right skills for this",
+    "Create a preparation timeline for this hackathon",
+    "Suggest relevant resources and tools",
+    "What are the key judging criteria to focus on?",
+    "How can I make my project stand out?",
+    "Help me understand the registration process",
+    "What should I know about team formation?",
+    "Give me tips for success in this specific hackathon",
+    "How does this hackathon compare to similar events?",
+    "What kind of projects typically win this type of hackathon?",
+    "Help me decide if I should participate"
+  ],
+  context: {
+    hackathon: {
+      id: hackathon.id,
+      title: hackathon.title,
+      description: hackathon.description,
+      theme: hackathon.theme,
+      difficulty_level: hackathon.difficulty_level,
+      status: hackathon.status,
+      registration_count: hackathon.registration_count,
+      max_participants: hackathon.max_participants,
+      min_team_size: hackathon.min_team_size,
+      max_team_size: hackathon.max_team_size,
+      prize_pool: hackathon.prize_pool,
+      requirements: hackathon.requirements,
+      judging_criteria: hackathon.judging_criteria,
+      is_virtual: hackathon.is_virtual,
+      location: hackathon.location,
+      start_date: hackathon.start_date,
+      end_date: hackathon.end_date,
+      registration_start: hackathon.registration_start,
+      registration_end: hackathon.registration_end,
+      rules: hackathon.rules
+    },
+    viewer: {
+      isRegistered: userData.isRegistered || false,
+      canRegister: userData.canRegister || false,
+      userRole: userData.userRole || 'anonymous',
+      isPublicView: userData.isPublicView || true
+    },
+    registrationStatus: hackathon.status,
+    timeUntilStart: hackathon.start_date ? new Date(hackathon.start_date).getTime() - Date.now() : null,
+    timeUntilRegistrationEnd: hackathon.registration_end ? new Date(hackathon.registration_end).getTime() - Date.now() : null
+  }
+})
+
 // Get appropriate context based on page
 export const getAIContextForPage = (
   page: string, 

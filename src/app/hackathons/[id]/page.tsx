@@ -39,8 +39,7 @@ import {
 } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
-import { CopilotSidepanel } from '@/components/ai/copilot-sidepanel'
-import type { FormSuggestion } from '@/components/ai/copilot-sidepanel'
+import { ModernCopilot } from '@/components/ai/modern-copilot'
 
 interface Hackathon {
   id: string
@@ -129,9 +128,6 @@ export default function PublicHackathonPage() {
     setCopilotOpen(true)
   }
 
-  const handleApplySuggestions = (suggestions: FormSuggestion[]) => {
-    console.log('Analysis suggestions received:', suggestions)
-  }
 
   const handleRegister = () => {
     if (!user) {
@@ -625,17 +621,22 @@ export default function PublicHackathonPage() {
         </Grid>
       </Container>
 
-      {/* AI Copilot Sidepanel */}
-      <CopilotSidepanel
+      {/* AI Copilot */}
+      <ModernCopilot
         isOpen={copilotOpen}
         onClose={() => {
           setCopilotOpen(false)
           setAnalysisMode(false)
         }}
-        onApplySuggestions={handleApplySuggestions}
-        formContext={hackathon}
-        analysisMode={analysisMode}
         currentUser={user}
+        page={`hackathon-${params.id}`}
+        data={{
+          hackathon,
+          isPublicView: true,
+          canRegister: canRegister(),
+          isRegistered,
+          userRole: user?.role || 'anonymous'
+        }}
       />
     </Box>
   )
