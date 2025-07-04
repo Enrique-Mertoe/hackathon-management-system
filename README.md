@@ -19,7 +19,7 @@ A comprehensive platform for discovering hackathons, building teams, and advanci
     *Email*: abutimartin778@gmail.com
     *Pass*: 11111111
 - **Participant**: Email: mikemilla778@gmail.com, Pass:11111111
-- Or create Your Own
+- Or create Your Own at [HackHub](https://hackathons.lomtechnology.com/auth/signup)
 ## 🛠 Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript, Material-UI (MUI)
