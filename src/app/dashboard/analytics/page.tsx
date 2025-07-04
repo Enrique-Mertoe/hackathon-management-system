@@ -66,6 +66,7 @@ export default function AnalyticsPage() {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [copilotOpen, setCopilotOpen] = useState(false)
   const [analyticsInsightsMode, setAnalyticsInsightsMode] = useState(false)
 
@@ -91,16 +92,19 @@ export default function AnalyticsPage() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true)
+      setError(null)
       
       const response = await fetch('/api/analytics/organizer')
       if (!response.ok) {
-        throw new Error('Failed to fetch analytics data')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch analytics data')
       }
       
       const data = await response.json()
       setAnalytics(data)
     } catch (error) {
       console.error('Error fetching analytics:', error)
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -127,6 +131,33 @@ export default function AnalyticsPage() {
       >
         <CircularProgress />
       </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Card sx={{ 
+          boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px', 
+          borderRadius: 2,
+          p: 4,
+          textAlign: 'center'
+        }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            Error Loading Analytics
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+          <Button 
+            variant="contained" 
+            onClick={fetchAnalytics}
+            sx={{ mt: 2 }}
+          >
+            Try Again
+          </Button>
+        </Card>
+      </Container>
     )
   }
 
@@ -257,15 +288,21 @@ export default function AnalyticsPage() {
                   Popular Themes
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                  {analytics?.popularThemes.map((theme, index) => (
-                    <Chip
-                      key={index}
-                      label={theme}
-                      color="primary"
-                      variant="outlined"
-                      size="small"
-                    />
-                  ))}
+                  {analytics?.popularThemes.length ? (
+                    analytics.popularThemes.map((theme, index) => (
+                      <Chip
+                        key={index}
+                        label={theme}
+                        color="primary"
+                        variant="outlined"
+                        size="small"
+                      />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No popular themes yet
+                    </Typography>
+                  )}
                 </Box>
               </CardContent>
             </Card>
@@ -278,26 +315,32 @@ export default function AnalyticsPage() {
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Monthly Performance
                 </Typography>
-                {analytics?.monthlyStats.map((stat, index) => {
-                  const maxParticipants = Math.max(...(analytics?.monthlyStats.map(s => s.participants) || [1]))
-                  const progressValue = maxParticipants > 0 ? (stat.participants / maxParticipants) * 100 : 0
-                  
-                  return (
-                    <Box key={index} sx={{ mb: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="body2">{stat.month}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {stat.participants} participants
-                        </Typography>
+                {analytics?.monthlyStats.length ? (
+                  analytics.monthlyStats.map((stat, index) => {
+                    const maxParticipants = Math.max(...(analytics?.monthlyStats.map(s => s.participants) || [1]))
+                    const progressValue = maxParticipants > 0 ? (stat.participants / maxParticipants) * 100 : 0
+                    
+                    return (
+                      <Box key={index} sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                          <Typography variant="body2">{stat.month}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {stat.participants} participants
+                          </Typography>
+                        </Box>
+                        <LinearProgress
+                          variant="determinate"
+                          value={progressValue}
+                          sx={{ height: 6, borderRadius: 3 }}
+                        />
                       </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={progressValue}
-                        sx={{ height: 6, borderRadius: 3 }}
-                      />
-                    </Box>
-                  )
-                })}
+                    )
+                  })
+                ) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                    No monthly data available yet
+                  </Typography>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -320,26 +363,36 @@ export default function AnalyticsPage() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {analytics?.topHackathons.map((hackathon, index) => (
-                        <TableRow key={index}>
-                          <TableCell component="th" scope="row">
-                            {hackathon.name}
-                          </TableCell>
-                          <TableCell align="right">{hackathon.participants}</TableCell>
-                          <TableCell align="right">
-                            <Chip
-                              label={hackathon.rating}
-                              color="success"
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Button size="small" variant="outlined">
-                              View Details
-                            </Button>
+                      {analytics?.topHackathons.length ? (
+                        analytics.topHackathons.map((hackathon, index) => (
+                          <TableRow key={index}>
+                            <TableCell component="th" scope="row">
+                              {hackathon.name}
+                            </TableCell>
+                            <TableCell align="right">{hackathon.participants}</TableCell>
+                            <TableCell align="right">
+                              <Chip
+                                label={hackathon.rating || 'N/A'}
+                                color={hackathon.rating ? "success" : "default"}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell align="right">
+                              <Button size="small" variant="outlined">
+                                View Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center">
+                            <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                              No hackathons created yet
+                            </Typography>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>
