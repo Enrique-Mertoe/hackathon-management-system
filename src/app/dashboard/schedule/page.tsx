@@ -15,7 +15,20 @@ import {
   CircularProgress,
   Avatar,
   Chip,
-  Paper
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  Switch,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import {
   Timeline,
@@ -38,8 +51,7 @@ import {
 } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
-import { CopilotSidepanel } from '@/components/ai/copilot-sidepanel'
-import type { FormSuggestion } from '@/components/ai/copilot-sidepanel'
+import { ModernCopilot } from '@/components/ai/modern-copilot'
 
 interface ScheduleEvent {
   id: string
@@ -67,7 +79,29 @@ export default function SchedulePage() {
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [copilotOpen, setCopilotOpen] = useState(false)
-  const [scheduleInsightsMode, setScheduleInsightsMode] = useState(false)
+  const [addEventOpen, setAddEventOpen] = useState(false)
+  const [notifyOpen, setNotifyOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [snackbar, setSnackbar] = useState<{open: boolean, message: string, severity: 'success' | 'error'}>({open: false, message: '', severity: 'success'})
+  const [notification, setNotification] = useState({
+    hackathonId: '',
+    subject: '',
+    message: '',
+    priority: 'NORMAL'
+  })
+  const [newEvent, setNewEvent] = useState({
+    hackathonId: '',
+    title: '',
+    description: '',
+    startTime: '',
+    endTime: '',
+    eventType: 'WORKSHOP',
+    location: '',
+    isVirtual: true,
+    capacity: ''
+  })
+  const [organizerHackathons, setOrganizerHackathons] = useState<any[]>([])
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -79,135 +113,180 @@ export default function SchedulePage() {
         }
         setUser(currentUser)
         await fetchScheduleData()
+        await fetchOrganizerHackathons()
       } catch (error) {
         console.error('Error checking auth:', error)
         router.push('/auth/signin')
       }
     }
 
-    checkAuth()
+    void checkAuth()
   }, [router])
+
+  const fetchOrganizerHackathons = async () => {
+    try {
+      const response = await fetch('/api/hackathons?organizer=true')
+      if (response.ok) {
+        const data = await response.json()
+        setOrganizerHackathons(data.hackathons || [])
+      }
+    } catch (error) {
+      console.error('Error fetching organizer hackathons:', error)
+    }
+  }
 
   const fetchScheduleData = async () => {
     try {
       setLoading(true)
-      // Mock data - replace with actual API call
-      const mockSchedule: ScheduleEvent[] = [
-        {
-          id: '1',
-          title: 'Registration Opens',
-          description: 'Participants can start registering for the hackathon',
-          startTime: '2024-02-01T09:00:00',
-          endTime: '2024-02-01T10:00:00',
-          type: 'REGISTRATION',
-          status: 'COMPLETED',
-          hackathon: 'AI Innovation Challenge'
-        },
-        {
-          id: '2',
-          title: 'Opening Ceremony',
-          description: 'Welcome participants and announce challenges',
-          startTime: '2024-02-15T10:00:00',
-          endTime: '2024-02-15T11:00:00',
-          type: 'KICKOFF',
-          status: 'UPCOMING',
-          hackathon: 'AI Innovation Challenge'
-        },
-        {
-          id: '3',
-          title: 'Technical Workshop',
-          description: 'Introduction to AI/ML tools and frameworks',
-          startTime: '2024-02-15T14:00:00',
-          endTime: '2024-02-15T16:00:00',
-          type: 'WORKSHOP',
-          status: 'UPCOMING',
-          hackathon: 'AI Innovation Challenge'
-        },
-        {
-          id: '4',
-          title: 'Submission Deadline',
-          description: 'Final deadline for project submissions',
-          startTime: '2024-02-17T18:00:00',
-          endTime: '2024-02-17T18:00:00',
-          type: 'DEADLINE',
-          status: 'UPCOMING',
-          hackathon: 'AI Innovation Challenge'
-        },
-        {
-          id: '5',
-          title: 'Judging Period',
-          description: 'Judges review and evaluate submissions',
-          startTime: '2024-02-17T19:00:00',
-          endTime: '2024-02-18T12:00:00',
-          type: 'JUDGING',
-          status: 'UPCOMING',
-          hackathon: 'AI Innovation Challenge'
-        },
-        {
-          id: '6',
-          title: 'Awards Ceremony',
-          description: 'Announce winners and distribute prizes',
-          startTime: '2024-02-18T15:00:00',
-          endTime: '2024-02-18T17:00:00',
-          type: 'AWARDS',
-          status: 'UPCOMING',
-          hackathon: 'AI Innovation Challenge'
-        }
-      ]
+      
+      // Fetch schedule events from API
+      const [eventsResponse, upcomingResponse] = await Promise.all([
+        fetch('/api/schedule/events'),
+        fetch('/api/schedule/upcoming')
+      ])
 
-      const mockUpcoming: UpcomingEvent[] = [
-        {
-          id: '1',
-          hackathon: 'AI Innovation Challenge',
-          nextEvent: 'Opening Ceremony',
-          timeUntil: '2 days',
-          status: 'REGISTRATION_OPEN'
-        },
-        {
-          id: '2',
-          hackathon: 'Sustainable Tech Hack',
-          nextEvent: 'Registration Opens',
-          timeUntil: '1 week',
-          status: 'PLANNING'
-        }
-      ]
+      if (eventsResponse.ok) {
+        const eventsData = await eventsResponse.json()
+        setScheduleEvents(eventsData.events || [])
+      } else {
+        console.error('Failed to fetch schedule events:', eventsResponse.statusText)
+        setScheduleEvents([])
+      }
 
-      setScheduleEvents(mockSchedule)
-      setUpcomingEvents(mockUpcoming)
+      if (upcomingResponse.ok) {
+        const upcomingData = await upcomingResponse.json()
+        setUpcomingEvents(upcomingData.events || [])
+      } else {
+        console.error('Failed to fetch upcoming events:', upcomingResponse.statusText)
+        setUpcomingEvents([])
+      }
     } catch (error) {
       console.error('Error fetching schedule data:', error)
+      setScheduleEvents([])
+      setUpcomingEvents([])
     } finally {
       setLoading(false)
     }
   }
 
   const handleGetScheduleInsights = () => {
-    setScheduleInsightsMode(true)
     setCopilotOpen(true)
   }
 
-  const handleApplySuggestions = (suggestions: FormSuggestion[]) => {
-    console.log('Schedule insights received:', suggestions)
+  const handleAddEvent = () => {
+    setAddEventOpen(true)
   }
 
-  const handleAddEvent = () => {
-    // TODO: Implement add event functionality
-    console.log('Add event clicked')
+  const handleCloseAddEvent = () => {
+    setAddEventOpen(false)
+    setNewEvent({
+      hackathonId: '',
+      title: '',
+      description: '',
+      startTime: '',
+      endTime: '',
+      eventType: 'WORKSHOP',
+      location: '',
+      isVirtual: true,
+      capacity: ''
+    })
+  }
+
+  const handleSaveEvent = async () => {
+    if (!newEvent.hackathonId || !newEvent.title || !newEvent.startTime || !newEvent.endTime) {
+      setSnackbar({open: true, message: 'Please fill in all required fields', severity: 'error'})
+      return
+    }
+
+    setSaving(true)
+    try {
+      const response = await fetch('/api/schedule/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hackathonId: newEvent.hackathonId,
+          title: newEvent.title,
+          description: newEvent.description,
+          startTime: newEvent.startTime,
+          endTime: newEvent.endTime,
+          eventType: newEvent.eventType,
+          location: newEvent.location,
+          isVirtual: newEvent.isVirtual,
+          capacity: newEvent.capacity ? parseInt(newEvent.capacity) : null
+        })
+      })
+
+      if (response.ok) {
+        setSnackbar({open: true, message: 'Event created successfully!', severity: 'success'})
+        handleCloseAddEvent()
+        await fetchScheduleData() // Refresh the data
+      } else {
+        const error = await response.json()
+        setSnackbar({open: true, message: error.error || 'Failed to create event', severity: 'error'})
+      }
+    } catch (error) {
+      console.error('Error creating event:', error)
+      setSnackbar({open: true, message: 'Failed to create event', severity: 'error'})
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleViewCalendar = () => {
-    // TODO: Navigate to calendar view
-    console.log('View calendar clicked')
+    router.push('/dashboard/schedule/calendar')
   }
 
   const handleScheduleTemplates = () => {
-    // TODO: Navigate to schedule templates
-    console.log('Schedule templates clicked')
+    router.push('/dashboard/schedule/templates')
   }
 
   const handleNotifyParticipants = () => {
-    // TODO: Implement participant notification
-    console.log('Notify participants clicked')
+    setNotifyOpen(true)
+  }
+
+  const handleCloseNotify = () => {
+    setNotifyOpen(false)
+    setNotification({
+      hackathonId: '',
+      subject: '',
+      message: '',
+      priority: 'NORMAL'
+    })
+  }
+
+  const handleSendNotification = async () => {
+    if (!notification.hackathonId || !notification.subject || !notification.message) {
+      setSnackbar({open: true, message: 'Please fill in all required fields', severity: 'error'})
+      return
+    }
+
+    setSending(true)
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hackathonId: notification.hackathonId,
+          subject: notification.subject,
+          message: notification.message,
+          priority: notification.priority,
+          type: 'ANNOUNCEMENT'
+        })
+      })
+
+      if (response.ok) {
+        setSnackbar({open: true, message: 'Notification sent successfully!', severity: 'success'})
+        handleCloseNotify()
+      } else {
+        const error = await response.json()
+        setSnackbar({open: true, message: error.error || 'Failed to send notification', severity: 'error'})
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error)
+      setSnackbar({open: true, message: 'Failed to send notification', severity: 'error'})
+    } finally {
+      setSending(false)
+    }
   }
 
   const getEventIcon = (type: string) => {
@@ -312,6 +391,7 @@ export default function SchedulePage() {
               variant="contained"
               startIcon={<AddIcon />}
               size="small"
+              onClick={handleAddEvent}
             >
               Add Event
             </Button>
@@ -512,18 +592,232 @@ export default function SchedulePage() {
         </Grid>
       </Container>
 
-      {/* AI Copilot Sidepanel */}
-      <CopilotSidepanel
+      {/* AI Copilot */}
+      <ModernCopilot
         isOpen={copilotOpen}
         onClose={() => {
           setCopilotOpen(false)
-          setScheduleInsightsMode(false)
         }}
         currentUser={user}
-        onApplySuggestions={handleApplySuggestions}
-        formContext={{ user, scheduleEvents, upcomingEvents }}
-        scheduleInsightsMode={scheduleInsightsMode}
+        page="schedule-management"
+        data={{
+          scheduleEvents,
+          upcomingEvents,
+          user
+        }}
       />
+
+      {/* Add Event Dialog */}
+      <Dialog open={addEventOpen} onClose={handleCloseAddEvent} maxWidth="md" fullWidth>
+        <DialogTitle>Add New Schedule Event</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={12}>
+              <FormControl fullWidth>
+                <InputLabel>Hackathon *</InputLabel>
+                <Select
+                  value={newEvent.hackathonId}
+                  label="Hackathon *"
+                  onChange={(e) => setNewEvent({...newEvent, hackathonId: e.target.value})}
+                >
+                  {organizerHackathons.map((hackathon) => (
+                    <MenuItem key={hackathon.id} value={hackathon.id}>
+                      {hackathon.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid size={6}>
+              <TextField
+                fullWidth
+                label="Event Title *"
+                value={newEvent.title}
+                onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+              />
+            </Grid>
+            
+            <Grid size={6}>
+              <FormControl fullWidth>
+                <InputLabel>Event Type</InputLabel>
+                <Select
+                  value={newEvent.eventType}
+                  label="Event Type"
+                  onChange={(e) => setNewEvent({...newEvent, eventType: e.target.value})}
+                >
+                  <MenuItem value="REGISTRATION">Registration</MenuItem>
+                  <MenuItem value="KICKOFF">Kickoff</MenuItem>
+                  <MenuItem value="WORKSHOP">Workshop</MenuItem>
+                  <MenuItem value="DEADLINE">Deadline</MenuItem>
+                  <MenuItem value="JUDGING">Judging</MenuItem>
+                  <MenuItem value="AWARDS">Awards</MenuItem>
+                  <MenuItem value="BREAK">Break</MenuItem>
+                  <MenuItem value="NETWORKING">Networking</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid size={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                multiline
+                rows={2}
+                value={newEvent.description}
+                onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+              />
+            </Grid>
+            
+            <Grid size={6}>
+              <TextField
+                fullWidth
+                label="Start Time *"
+                type="datetime-local"
+                value={newEvent.startTime}
+                onChange={(e) => setNewEvent({...newEvent, startTime: e.target.value})}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            
+            <Grid size={6}>
+              <TextField
+                fullWidth
+                label="End Time *"
+                type="datetime-local"
+                value={newEvent.endTime}
+                onChange={(e) => setNewEvent({...newEvent, endTime: e.target.value})}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            
+            <Grid size={8}>
+              <TextField
+                fullWidth
+                label="Location"
+                value={newEvent.location}
+                onChange={(e) => setNewEvent({...newEvent, location: e.target.value})}
+              />
+            </Grid>
+            
+            <Grid size={4}>
+              <TextField
+                fullWidth
+                label="Capacity"
+                type="number"
+                value={newEvent.capacity}
+                onChange={(e) => setNewEvent({...newEvent, capacity: e.target.value})}
+              />
+            </Grid>
+            
+            <Grid size={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={newEvent.isVirtual}
+                    onChange={(e) => setNewEvent({...newEvent, isVirtual: e.target.checked})}
+                  />
+                }
+                label="Virtual Event"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAddEvent}>Cancel</Button>
+          <Button 
+            onClick={handleSaveEvent} 
+            variant="contained" 
+            disabled={saving}
+          >
+            {saving ? <CircularProgress size={20} /> : 'Save Event'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notify Participants Dialog */}
+      <Dialog open={notifyOpen} onClose={handleCloseNotify} maxWidth="md" fullWidth>
+        <DialogTitle>Notify Participants</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={12}>
+              <FormControl fullWidth>
+                <InputLabel>Hackathon *</InputLabel>
+                <Select
+                  value={notification.hackathonId}
+                  label="Hackathon *"
+                  onChange={(e) => setNotification({...notification, hackathonId: e.target.value})}
+                >
+                  {organizerHackathons.map((hackathon) => (
+                    <MenuItem key={hackathon.id} value={hackathon.id}>
+                      {hackathon.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid size={8}>
+              <TextField
+                fullWidth
+                label="Subject *"
+                value={notification.subject}
+                onChange={(e) => setNotification({...notification, subject: e.target.value})}
+                placeholder="e.g., Schedule Update: Workshop Time Changed"
+              />
+            </Grid>
+            
+            <Grid size={4}>
+              <FormControl fullWidth>
+                <InputLabel>Priority</InputLabel>
+                <Select
+                  value={notification.priority}
+                  label="Priority"
+                  onChange={(e) => setNotification({...notification, priority: e.target.value})}
+                >
+                  <MenuItem value="LOW">Low</MenuItem>
+                  <MenuItem value="NORMAL">Normal</MenuItem>
+                  <MenuItem value="HIGH">High</MenuItem>
+                  <MenuItem value="URGENT">Urgent</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid size={12}>
+              <TextField
+                fullWidth
+                label="Message *"
+                multiline
+                rows={6}
+                value={notification.message}
+                onChange={(e) => setNotification({...notification, message: e.target.value})}
+                placeholder="Enter your message to participants..."
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseNotify}>Cancel</Button>
+          <Button 
+            onClick={handleSendNotification} 
+            variant="contained" 
+            disabled={sending}
+          >
+            {sending ? <CircularProgress size={20} /> : 'Send Notification'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={() => setSnackbar({...snackbar, open: false})}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({...snackbar, open: false})}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

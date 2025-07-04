@@ -6,8 +6,8 @@ export async function GET(request: NextRequest) {
   try {
     const sb = await supabase()
     // Get current user
-    const { user, error: authError } = await auth.getSession(sb)
-    if (authError || !user) {
+    const user = await auth.getCurrentUser(sb)
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

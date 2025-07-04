@@ -299,6 +299,49 @@ export const getHackathonDetailContext = (hackathon: any, userData: any): AIPage
   }
 })
 
+// Schedule Management Context
+export const getScheduleManagementContext = (scheduleEvents: any[], upcomingEvents: any[]): AIPageContext => ({
+  page: 'schedule-management',
+  mode: 'insights',
+  prompts: [
+    "Analyze my hackathon schedule efficiency",
+    "Suggest optimal timing between events",
+    "Help me plan a better event timeline",
+    "Identify potential scheduling conflicts",
+    "Recommend schedule templates for different hackathon types",
+    "Analyze participant engagement with current schedule",
+    "What events should I add to improve participant experience?",
+    "Help me optimize break times and workshop spacing",
+    "Suggest automation for schedule notifications",
+    "Compare my schedule with successful hackathons"
+  ],
+  context: {
+    scheduleEvents: scheduleEvents.map(e => ({
+      id: e.id,
+      title: e.title,
+      description: e.description,
+      type: e.type,
+      status: e.status,
+      startTime: e.startTime,
+      endTime: e.endTime,
+      hackathon: e.hackathon
+    })),
+    upcomingEvents: upcomingEvents.map(e => ({
+      id: e.id,
+      hackathon: e.hackathon,
+      nextEvent: e.nextEvent,
+      timeUntil: e.timeUntil,
+      status: e.status
+    })),
+    totalEvents: scheduleEvents.length,
+    completedEvents: scheduleEvents.filter(e => e.status === 'COMPLETED').length,
+    upcomingEventsCount: scheduleEvents.filter(e => e.status === 'UPCOMING').length,
+    activeEvents: scheduleEvents.filter(e => e.status === 'ACTIVE').length,
+    eventTypes: [...new Set(scheduleEvents.map(e => e.type))],
+    hackathons: [...new Set(scheduleEvents.map(e => e.hackathon))]
+  }
+})
+
 // Get appropriate context based on page
 export const getAIContextForPage = (
   page: string, 
@@ -325,6 +368,9 @@ export const getAIContextForPage = (
     
     case 'hackathon-browse':
       return getHackathonBrowseContext(data.hackathons || [], data.filters || {})
+    
+    case 'schedule-management':
+      return getScheduleManagementContext(data.scheduleEvents || [], data.upcomingEvents || [])
     
     default:
       // Handle hackathon detail pages with dynamic IDs

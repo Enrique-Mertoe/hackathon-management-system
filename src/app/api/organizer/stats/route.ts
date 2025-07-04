@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import {supabase} from "@/lib/supabase.server";
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await auth.getCurrentUser()
+    const sb = await supabase()
+    const user = await auth.getCurrentUser(sb)
     if (!user || !auth.hasRole(user, 'ORGANIZER')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
