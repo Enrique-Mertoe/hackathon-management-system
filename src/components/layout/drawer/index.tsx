@@ -71,7 +71,7 @@ export function Drawer({ isOpen, onClose }: DrawerProps) {
     },
     {
       name: 'Discover',
-      href: '/dashboard/discover',
+      href: '/discover',
       icon: <ExploreIcon />
     },
     {
