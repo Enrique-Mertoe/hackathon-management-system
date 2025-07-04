@@ -1,193 +1,371 @@
 'use client'
 
-import React from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  Box,
+  Card,
+  CardContent,
+  Button,
+  Typography,
+  Container,
+  Grid,
+  Chip,
+  useTheme,
+  alpha,
+  Avatar,
+  Paper,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Divider,
+  Badge
+} from '@mui/material'
+import {
+  RocketLaunch as RocketIcon,
+  BarChart as ChartIcon,
+  Group as TeamIcon,
+  EmojiEvents as TrophyIcon,
+  AutoAwesome as SparkleIcon,
+  Schedule as ScheduleIcon,
+  Person as PersonIcon,
+  Code as CodeIcon
+} from '@mui/icons-material'
 import type { AuthUser } from '@/lib/auth'
+
+interface ParticipantStats {
+  totalHackathons: number
+  activeHackathons: number
+  completedHackathons: number
+  totalTeams: number
+  skillsCount: number
+  averageRank: number | null
+  totalPrizes: number
+}
+
+interface HackathonParticipation {
+  id: string
+  title: string
+  status: string
+  start_date: string
+  end_date: string
+  team_name?: string
+  role?: string
+  rank?: number
+  prize_amount?: number
+}
+
+interface TeamMembership {
+  id: string
+  name: string
+  hackathon_title: string
+  role: string
+  status: string
+  member_count: number
+}
 
 interface ParticipantDashboardProps {
   user: AuthUser
 }
 
 export default function ParticipantDashboard({ user }: ParticipantDashboardProps) {
+  const theme = useTheme()
+  const router = useRouter()
+  
+  const [stats, setStats] = useState<ParticipantStats | null>(null)
+  const [recentHackathons, setRecentHackathons] = useState<HackathonParticipation[]>([])
+  const [recentTeams, setRecentTeams] = useState<TeamMembership[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchParticipantData()
+  }, [user])
+
+  const fetchParticipantData = async () => {
+    try {
+      setLoading(true)
+      
+      // Fetch participant stats
+      const statsResponse = await fetch('/api/participant/stats')
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats(statsData)
+      }
+
+      // Fetch recent hackathon participations
+      const hackathonsResponse = await fetch('/api/participant/hackathons?limit=5')
+      if (hackathonsResponse.ok) {
+        const hackathonsData = await hackathonsResponse.json()
+        setRecentHackathons(hackathonsData.participations || [])
+      }
+
+      // Fetch recent team memberships
+      const teamsResponse = await fetch('/api/participant/teams?limit=3')
+      if (teamsResponse.ok) {
+        const teamsData = await teamsResponse.json()
+        setRecentTeams(teamsData.teams || [])
+      }
+    } catch (error) {
+      console.error('Error fetching participant data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active': 
+      case 'ongoing': 
+        return { color: theme.palette.success.main, background: alpha(theme.palette.success.main, 0.1) }
+      case 'completed': 
+        return { color: theme.palette.info.main, background: alpha(theme.palette.info.main, 0.1) }
+      case 'upcoming': 
+        return { color: theme.palette.warning.main, background: alpha(theme.palette.warning.main, 0.1) }
+      case 'cancelled': 
+        return { color: theme.palette.error.main, background: alpha(theme.palette.error.main, 0.1) }
+      default: 
+        return { color: theme.palette.text.secondary, background: alpha(theme.palette.text.secondary, 0.1) }
+    }
+  }
+
+  if (loading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <CircularProgress size={40} />
+        </Box>
+      </Container>
+    )
+  }
+
   return (
-    <div className="space-y-12">
-      {/* Hero Stats with Floating Elements */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 rounded-3xl"></div>
-        <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-6 p-8">
-          {/* Profile Status */}
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur group-hover:blur-md transition-all duration-300"></div>
-            <div className="relative bg-background/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300">
-              <div className="flex items-center gap-3 mb-2">
-                <div className={`w-3 h-3 rounded-full ${user.email_verified ? 'bg-green-500' : 'bg-yellow-500'} animate-pulse`}></div>
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</span>
-              </div>
-              <div className="text-2xl font-bold text-foreground">
-                {user.email_verified ? 'Verified' : 'Pending'}
-              </div>
-            </div>
-          </div>
+    <Container maxWidth="lg" sx={{ py: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {/* Quick Stats */}
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 6, md: 3 }}>
+            <Card sx={{ borderRadius: 2, p: 2 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" fontWeight="bold" color="text.primary">
+                  {stats?.totalHackathons || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Events
+                </Typography>
+              </Box>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 6, md: 3 }}>
+            <Card sx={{ borderRadius: 2, p: 2 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" fontWeight="bold" color="text.primary">
+                  {stats?.totalTeams || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Teams
+                </Typography>
+              </Box>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 6, md: 3 }}>
+            <Card sx={{ borderRadius: 2, p: 2 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" fontWeight="bold" color="text.primary">
+                  {stats?.skillsCount || (Array.isArray(user.skills) ? user.skills.length : 0)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Skills
+                </Typography>
+              </Box>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 6, md: 3 }}>
+            <Card sx={{ borderRadius: 2, p: 2 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" fontWeight="bold" color={user.email_verified ? 'success.main' : 'warning.main'}>
+                  {user.email_verified ? '✓' : '⚠'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {user.email_verified ? 'Verified' : 'Pending'}
+                </Typography>
+              </Box>
+            </Card>
+          </Grid>
+        </Grid>
 
-          {/* Skills */}
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-2xl blur group-hover:blur-md transition-all duration-300"></div>
-            <div className="relative bg-background/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Skills</span>
-              </div>
-              <div className="text-2xl font-bold text-foreground">
-                {Array.isArray(user.skills) ? user.skills.length : 0}
-              </div>
-            </div>
-          </div>
+        {/* Quick Actions */}
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ borderRadius: 2, p: 3, cursor: 'pointer' }} onClick={() => router.push('/hackathons')}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <RocketIcon color="primary" />
+                <Box>
+                  <Typography variant="h6" fontWeight="bold">Explore Hackathons</Typography>
+                  <Typography variant="caption" color="text.secondary">Find your next challenge</Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ borderRadius: 2, p: 3, cursor: 'pointer' }} onClick={() => router.push('/teams')}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TeamIcon color="primary" />
+                <Box>
+                  <Typography variant="h6" fontWeight="bold">Find Teams</Typography>
+                  <Typography variant="caption" color="text.secondary">Connect with others</Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+        </Grid>
 
-          {/* Hackathons */}
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl blur group-hover:blur-md transition-all duration-300"></div>
-            <div className="relative bg-background/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Events</span>
-              </div>
-              <div className="text-2xl font-bold text-foreground">0</div>
-            </div>
-          </div>
+        {/* Recent Activity */}
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 8 }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Recent Hackathons</Typography>
+            <Card sx={{ 
+              borderRadius: 2,
+              boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px'
+            }}>
+              <CardContent sx={{ p: 0 }}>
+                {recentHackathons.length === 0 ? (
+                  <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      No hackathons yet
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => router.push('/hackathons')}
+                    >
+                      Explore Hackathons
+                    </Button>
+                  </Box>
+                ) : (
+                  <List sx={{ p: 0 }}>
+                    {recentHackathons.slice(0, 3).map((hackathon, index) => (
+                      <React.Fragment key={hackathon.id}>
+                        <ListItem sx={{ px: 2, py: 1 }}>
+                          <ListItemText
+                            primary={
+                              <Typography variant="body2" fontWeight="medium" noWrap>
+                                {hackathon.title}
+                              </Typography>
+                            }
+                            secondary={
+                              <Typography variant="caption" color="text.secondary">
+                                {formatDate(hackathon.start_date)}
+                              </Typography>
+                            }
+                          />
+                          <Chip
+                            label={hackathon.status}
+                            size="small"
+                            sx={{ fontSize: '0.7rem', height: 20 }}
+                          />
+                        </ListItem>
+                        {index < Math.min(recentHackathons.length - 1, 2) && <Divider />}
+                      </React.Fragment>
+                    ))}
+                  </List>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
 
-          {/* Teams */}
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-2xl blur group-hover:blur-md transition-all duration-300"></div>
-            <div className="relative bg-background/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Teams</span>
-              </div>
-              <div className="text-2xl font-bold text-foreground">0</div>
-            </div>
-          </div>
-        </div>
-      </div>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>My Teams</Typography>
+            <Card sx={{ 
+              borderRadius: 2,
+              boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px'
+            }}>
+              <CardContent sx={{ p: 0 }}>
+                {recentTeams.length === 0 ? (
+                  <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      No teams yet
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => router.push('/teams')}
+                    >
+                      Find Teams
+                    </Button>
+                  </Box>
+                ) : (
+                  <List sx={{ p: 0 }}>
+                    {recentTeams.slice(0, 3).map((team, index) => (
+                      <React.Fragment key={team.id}>
+                        <ListItem sx={{ px: 2, py: 1 }}>
+                          <ListItemText
+                            primary={
+                              <Typography variant="body2" fontWeight="medium" noWrap>
+                                {team.name}
+                              </Typography>
+                            }
+                            secondary={
+                              <Typography variant="caption" color="text.secondary" noWrap>
+                                {team.hackathon_title}
+                              </Typography>
+                            }
+                          />
+                        </ListItem>
+                        {index < Math.min(recentTeams.length - 1, 2) && <Divider />}
+                      </React.Fragment>
+                    ))}
+                  </List>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
 
-      {/* Dynamic Action Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Primary Action - Discover */}
-        <div className="lg:col-span-2 group relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-3xl"></div>
-          <Card className="relative border-0 bg-gradient-to-br from-background/90 to-background/70 backdrop-blur-sm hover:scale-[1.02] transition-all duration-500">
-            <CardContent className="p-8">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center">
-                      <span className="text-2xl">🚀</span>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-foreground">Discover Hackathons</h3>
-                      <p className="text-sm text-muted-foreground">Your next adventure awaits</p>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground mb-6 max-w-md">
-                    Explore cutting-edge hackathons tailored to your skills and interests. Join a community of innovators building the future.
-                  </p>
-                </div>
-                <div className="text-6xl opacity-10 group-hover:opacity-20 transition-opacity duration-300">⚡</div>
-              </div>
-              <Button size="lg" className="w-full md:w-auto">
-                Start Exploring
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Secondary Actions */}
-        <div className="space-y-6">
-          {/* My Journey */}
-          <Card className="border-0 bg-gradient-to-br from-background/90 to-primary/5 backdrop-blur-sm hover:scale-105 transition-all duration-300 group">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                  <span className="text-xl">📊</span>
-                </div>
-                <div>
-                  <h4 className="font-bold text-foreground">My Journey</h4>
-                  <p className="text-xs text-muted-foreground">Track progress</p>
-                </div>
-              </div>
-              <Button variant="secondary" size="sm" className="w-full">View Progress</Button>
-            </CardContent>
-          </Card>
-
-          {/* Find Teams */}
-          <Card className="border-0 bg-gradient-to-br from-background/90 to-green-500/5 backdrop-blur-sm hover:scale-105 transition-all duration-300 group">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                  <span className="text-xl">👥</span>
-                </div>
-                <div>
-                  <h4 className="font-bold text-foreground">Find Teams</h4>
-                  <p className="text-xs text-muted-foreground">Connect & collaborate</p>
-                </div>
-              </div>
-              <Button
-                  //@ts-ignore
-                  variant="outline" size="sm" className="w-full">Browse Teams</Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Activity Timeline */}
-      <div className="relative">
-        <div className="flex items-center gap-4 mb-8">
-          <h2 className="text-3xl font-bold text-foreground">Your Timeline</h2>
-          <div className="flex-1 h-px bg-gradient-to-r from-primary/50 to-transparent"></div>
-        </div>
-        
-        <Card className="border-0 bg-gradient-to-br from-background/50 to-muted/20 backdrop-blur-sm">
-          <CardContent className="p-12">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-3xl">✨</span>
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Ready to start your journey?</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Your hackathon adventures will appear here. Join your first event to unlock your potential!
-              </p>
-              <Button size="lg" className="shadow-lg">
-                Join Your First Hackathon
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Skills Showcase */}
-      {Array.isArray(user.skills) && user.skills.length > 0 && (
-        <div className="relative">
-          <div className="flex items-center gap-4 mb-8">
-            <h2 className="text-3xl font-bold text-foreground">Your Expertise</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-blue-500/50 to-transparent"></div>
-          </div>
-          
-          <Card className="border-0 bg-gradient-to-br from-background/50 to-blue-500/5 backdrop-blur-sm">
-            <CardContent className="p-8">
-              <div className="flex flex-wrap gap-3">
-                {user.skills.map((skill, index) => (
-                  <span
+        {/* Skills */}
+        {Array.isArray(user.skills) && user.skills.length > 0 && (
+          <Box>
+            <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Skills</Typography>
+            <Card sx={{ 
+              borderRadius: 2, 
+              p: 2,
+              boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px'
+            }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {user.skills.slice(0, 8).map((skill, index) => (
+                  <Chip
                     key={index}
-                    className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 cursor-default"
-                  >
-                    {skill?.toLocaleString()}
-                  </span>
+                    label={skill?.toString()}
+                    size="small"
+                    sx={{
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                      color: theme.palette.primary.main,
+                      fontSize: '0.75rem',
+                    }}
+                  />
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </div>
+                {user.skills.length > 8 && (
+                  <Chip
+                    label={`+${user.skills.length - 8} more`}
+                    size="small"
+                    variant="outlined"
+                    sx={{ fontSize: '0.75rem' }}
+                  />
+                )}
+              </Box>
+            </Card>
+          </Box>
+        )}
+      </Box>
+    </Container>
   )
 }

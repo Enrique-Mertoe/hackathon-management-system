@@ -3,9 +3,22 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Box,
+  Button,
+  TextField,
+  Card,
+  CardContent,
+  Typography,
+  Container,
+  Alert,
+  Avatar,
+  useTheme,
+  alpha,
+  Paper,
+  Divider
+} from '@mui/material'
+import { LockOutlined as LockIcon, Google as GoogleIcon } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 import Image from 'next/image'
 
@@ -15,6 +28,7 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const theme = useTheme()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,62 +50,187 @@ export default function SignInPage() {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const { error } = await auth.signInWithGoogle()
+      
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+      }
+      // Don't set loading to false here as user will be redirected
+    } catch (err) {
+      setError('An unexpected error occurred')
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md animate-fade-in">
-        <Card className="shadow-2xl border-0 rounded-2xl p-4 !bg-black/70">
-          <CardHeader>
-            <div className="flex flex-col items-center mb-2">
-              <Image src="/logo.png" alt="HackHub Logo" width={100} height={100} className="mb-4 rounded-full shadow-lg" />
-            </div>
-            <CardTitle className="text-center text-2xl font-bold">Welcome back</CardTitle>
-            <CardDescription className="text-center">
-              Sign in to your HackHub account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+        px: 2,
+      }}
+    >
+      <Container maxWidth="xs">
+        <Paper
+          elevation={12}
+          sx={{
+            borderRadius: 2,
+            overflow: 'hidden',
+            background: alpha(theme.palette.background.paper, 0.9),
+            backdropFilter: 'blur(20px)',
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          }}
+        >
+          <Box sx={{ p: 3 }}>
+            {/* Logo and Header */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+              <Avatar
+                sx={{
+                  width: 60,
+                  height: 60,
+                  mb: 2,
+                  backgroundColor: theme.palette.primary.main,
+                  boxShadow: theme.shadows[6],
+                }}
+              >
+                <Image src="/logo-favicon.ico" alt="HackHub Logo" width={40} height={40} />
+              </Avatar>
+              <Typography variant="h5" fontWeight="bold" color="text.primary" gutterBottom>
+                Welcome back
+              </Typography>
+              <Typography variant="body1" color="text.secondary" textAlign="center">
+                Sign in to your HackHub account
+              </Typography>
+            </Box>
+
+            {/* Form */}
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
               {error && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded text-destructive text-sm font-medium mb-2">
+                <Alert severity="error" sx={{ mb: 2 }}>
                   {error}
-                </div>
+                </Alert>
               )}
-              <Input
+              
+              <TextField
+                fullWidth
                 type="email"
+                label="Email Address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
                 required
+                size="small"
+                sx={{ mb: 2 }}
+                variant="outlined"
               />
-              <Input
+              
+              <TextField
+                fullWidth
                 type="password"
+                label="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
                 required
+                size="small"
+                sx={{ mb: 3 }}
+                variant="outlined"
               />
+              
               <Button
                 type="submit"
-                className="w-full py-2 text-base rounded-lg shadow-md hover:shadow-lg transition"
+                fullWidth
+                variant="contained"
+                size="medium"
                 disabled={loading}
+                sx={{
+                  py: 1,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  boxShadow: theme.shadows[3],
+                  '&:hover': {
+                    boxShadow: theme.shadows[6],
+                  },
+                  mb: 2,
+                }}
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
-            </form>
-            <div className="mt-6 text-center space-y-2">
-              <Link href="/auth/reset-password" className="text-sm text-primary font-medium hover:underline">
+
+              {/* Divider */}
+              <Box sx={{ display: 'flex', alignItems: 'center', my: 2 }}>
+                <Divider sx={{ flex: 1 }} />
+                <Typography variant="caption" color="text.secondary" sx={{ px: 2 }}>
+                  or
+                </Typography>
+                <Divider sx={{ flex: 1 }} />
+              </Box>
+
+              {/* Google Sign In */}
+              <Button
+                fullWidth
+                variant="outlined"
+                size="medium"
+                disabled={loading}
+                startIcon={<GoogleIcon />}
+                onClick={handleGoogleSignIn}
+                sx={{
+                  py: 1,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  borderColor: theme.palette.divider,
+                  color: theme.palette.text.primary,
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                  },
+                }}
+              >
+                Continue with Google
+              </Button>
+            </Box>
+
+            {/* Links */}
+            <Box sx={{ mt: 3, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Link 
+                href="/auth/reset-password" 
+                style={{ 
+                  color: theme.palette.primary.main, 
+                  textDecoration: 'none',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                }}
+              >
                 Forgot your password?
               </Link>
-              <p className="text-sm text-muted-foreground">
+              <Typography variant="caption" color="text.secondary">
                 Don't have an account?{' '}
-                <Link href="/auth/signup" className="text-primary font-semibold hover:underline">
+                <Link 
+                  href="/auth/signup" 
+                  style={{ 
+                    color: theme.palette.primary.main, 
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                  }}
+                >
                   Sign up
                 </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   )
 }

@@ -48,6 +48,18 @@ export const auth = {
     return { data, error }
   },
 
+  // Sign in with Google
+  async signInWithGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      }
+    })
+
+    return { data, error }
+  },
+
   // Sign out user
   async signOut() {
     const { error } = await supabase.auth.signOut()

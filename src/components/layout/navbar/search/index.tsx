@@ -1,5 +1,5 @@
-import React, {useState, useRef, useEffect} from 'react';
-import {Search, X} from 'lucide-react';
+import React, {useState, useRef, useEffect, useCallback} from 'react';
+import {Search, X, Sparkles} from 'lucide-react';
 import {motion} from "framer-motion"
 import {
     IconButton,
@@ -10,77 +10,168 @@ import {
     Chip,
     InputAdornment,
     useTheme,
-    alpha
+    alpha,
+    CircularProgress,
+    Divider
 } from '@mui/material';
-
+import { useRouter } from 'next/navigation';
+import { hackathonAI } from '@/lib/hackathon-ai-service';
 
 interface SearchResult {
-    id: number;
+    id: string;
     title: string;
     description: string;
-    category: string;
+    category: 'Hackathon' | 'Team' | 'User' | 'Project' | 'AI Suggestion';
+    type: 'hackathon' | 'team' | 'user' | 'project' | 'ai';
+    url?: string;
+    metadata?: {
+        status?: string;
+        date?: string;
+        members?: number;
+        prize?: number;
+        skills?: string[];
+    };
 }
 
 const FloatingSearch: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [showAISuggestions, setShowAISuggestions] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const theme = useTheme();
+    const router = useRouter();
 
-    // Mock search data
-    const mockData: SearchResult[] = [
-        {
-            id: 1,
-            title: 'Getting Started with React',
-            description: 'Learn the basics of React development',
-            category: 'Tutorial'
-        },
-        {
-            id: 2,
-            title: 'Advanced TypeScript Patterns',
-            description: 'Explore complex TypeScript patterns and best practices',
-            category: 'Guide'
-        },
-        {
-            id: 3,
-            title: 'Tailwind CSS Components',
-            description: 'Beautiful pre-built components using Tailwind',
-            category: 'Component'
-        },
-        {
-            id: 4,
-            title: 'State Management Solutions',
-            description: 'Compare different state management libraries',
-            category: 'Article'
-        },
-        {
-            id: 5,
-            title: 'Performance Optimization',
-            description: 'Tips for optimizing React application performance',
-            category: 'Guide'
-        },
-        {
-            id: 6,
-            title: 'Testing Best Practices',
-            description: 'How to write effective tests for your components',
-            category: 'Tutorial'
-        },
-    ];
-
-    // Handle search functionality
-    useEffect(() => {
-        if (searchQuery.trim()) {
-            const filtered = mockData.filter(item =>
-                item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.description.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            setSearchResults(filtered);
-        } else {
+    // Search functionality with debouncing
+    const performSearch = useCallback(async (query: string) => {
+        if (!query.trim()) {
             setSearchResults([]);
+            setShowAISuggestions(false);
+            return;
         }
-    }, [searchQuery]);
+
+        setLoading(true);
+        try {
+            // Search hackathons, teams, users, and projects in parallel
+            const [hackathonsRes, teamsRes, usersRes] = await Promise.allSettled([
+                fetch(`/api/search?type=hackathons&q=${encodeURIComponent(query)}&limit=3`),
+                fetch(`/api/search?type=teams&q=${encodeURIComponent(query)}&limit=2`),
+                fetch(`/api/search?type=users&q=${encodeURIComponent(query)}&limit=2`)
+            ]);
+
+            const results: SearchResult[] = [];
+
+            // Process hackathons
+            if (hackathonsRes.status === 'fulfilled' && hackathonsRes.value.ok) {
+                const hackathons = await hackathonsRes.value.json();
+                hackathons.forEach((hackathon: any) => {
+                    results.push({
+                        id: hackathon.id,
+                        title: hackathon.title,
+                        description: hackathon.description || hackathon.theme,
+                        category: 'Hackathon',
+                        type: 'hackathon',
+                        url: `/hackathons/${hackathon.id}`,
+                        metadata: {
+                            status: hackathon.status,
+                            date: hackathon.start_date,
+                            prize: hackathon.prize_pool
+                        }
+                    });
+                });
+            }
+
+            // Process teams
+            if (teamsRes.status === 'fulfilled' && teamsRes.value.ok) {
+                const teams = await teamsRes.value.json();
+                teams.forEach((team: any) => {
+                    results.push({
+                        id: team.id,
+                        title: team.name,
+                        description: team.description,
+                        category: 'Team',
+                        type: 'team',
+                        url: `/teams/${team.id}`,
+                        metadata: {
+                            members: team.current_members?.length || 0,
+                            skills: team.skills_needed
+                        }
+                    });
+                });
+            }
+
+            // Process users
+            if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
+                const users = await usersRes.value.json();
+                users.forEach((user: any) => {
+                    results.push({
+                        id: user.id,
+                        title: user.full_name || user.username,
+                        description: `${user.role} • ${user.skills?.join(', ') || 'No skills listed'}`,
+                        category: 'User',
+                        type: 'user',
+                        url: `/profile/${user.id}`,
+                        metadata: {
+                            skills: user.skills
+                        }
+                    });
+                });
+            }
+
+            // Add AI suggestions if we have some results but want to enhance them
+            if (results.length > 0 && results.length < 5) {
+                setShowAISuggestions(true);
+                try {
+                    // Generate AI suggestions based on search query
+                    const aiSuggestions = await generateAISuggestions(query);
+                    results.push(...aiSuggestions);
+                } catch (aiError) {
+                    console.warn('AI suggestions failed:', aiError);
+                }
+            }
+
+            setSearchResults(results);
+        } catch (error) {
+            console.error('Search failed:', error);
+            setSearchResults([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // Debounced search effect
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            performSearch(searchQuery);
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery, performSearch]);
+
+    // AI suggestions generator
+    const generateAISuggestions = async (query: string): Promise<SearchResult[]> => {
+        // Use the existing AI service to generate relevant suggestions
+        const suggestions = await hackathonAI.generateProjectIdeas(
+            `Search: ${query}`,
+            ['JavaScript', 'Python', 'React', 'Node.js'], // Common skills
+            'INTERMEDIATE',
+            '48 hours',
+            2
+        );
+
+        return suggestions.map((suggestion, index) => ({
+            id: `ai-${index}`,
+            title: `💡 ${suggestion.title}`,
+            description: suggestion.description,
+            category: 'AI Suggestion',
+            type: 'ai',
+            metadata: {
+                skills: suggestion.required_skills
+            }
+        }));
+    };
 
     // Handle clicking outside to close
     useEffect(() => {
@@ -125,12 +216,20 @@ const FloatingSearch: React.FC = () => {
 
     const getCategoryColor = (category: string) => {
         const colors = {
-            'Tutorial': { backgroundColor: alpha(theme.palette.info.main, 0.1), color: theme.palette.info.main },
-            'Guide': { backgroundColor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main },
-            'Component': { backgroundColor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main },
-            'Article': { backgroundColor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main },
+            'Hackathon': { backgroundColor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main },
+            'Team': { backgroundColor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main },
+            'User': { backgroundColor: alpha(theme.palette.info.main, 0.1), color: theme.palette.info.main },
+            'Project': { backgroundColor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main },
+            'AI Suggestion': { backgroundColor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main },
         };
         return colors[category as keyof typeof colors] || { backgroundColor: alpha(theme.palette.grey[500], 0.1), color: theme.palette.grey[700] };
+    };
+
+    const handleResultClick = (result: SearchResult) => {
+        if (result.url) {
+            router.push(result.url);
+        }
+        handleClose();
     };
 
     return (
@@ -175,28 +274,34 @@ const FloatingSearch: React.FC = () => {
                         <TextField
                             inputRef={inputRef}
                             fullWidth
-                            placeholder="Search anything..."
+                            placeholder="Search hackathons, teams, users..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             variant="outlined"
                             size="small"
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Search size={20} color={theme.palette.text.secondary} />
-                                    </InputAdornment>
-                                ),
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={handleClose}
-                                            size="small"
-                                            sx={{ color: theme.palette.text.secondary }}
-                                        >
-                                            <X size={16} />
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            {loading ? (
+                                                <CircularProgress size={20} sx={{ color: theme.palette.text.secondary }} />
+                                            ) : (
+                                                <Search size={20} color={theme.palette.text.secondary} />
+                                            )}
+                                        </InputAdornment>
+                                    ),
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={handleClose}
+                                                size="small"
+                                                sx={{ color: theme.palette.text.secondary }}
+                                            >
+                                                <X size={16} />
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }
                             }}
                             sx={{
                                 '& .MuiOutlinedInput-root': {
@@ -240,58 +345,100 @@ const FloatingSearch: React.FC = () => {
                                     {searchQuery.trim() ? (
                                         searchResults.length > 0 ? (
                                             <Box sx={{ p: 1 }}>
-                                                {searchResults.map((result) => (
-                                                    <Box
-                                                        key={result.id}
-                                                        sx={{
-                                                            p: 2,
-                                                            borderRadius: 2,
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s ease-in-out',
-                                                            '&:hover': {
-                                                                backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                                                            },
-                                                        }}
-                                                    >
-                                                        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                                                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    fontWeight="medium"
+                                                {searchResults.map((result, index) => (
+                                                    <Box key={result.id}>
+                                                        {result.type === 'ai' && index === searchResults.findIndex(r => r.type === 'ai') && (
+                                                            <>
+                                                                <Divider sx={{ my: 1 }} />
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1 }}>
+                                                                    <Sparkles size={16} color={theme.palette.warning.main} />
+                                                                    <Typography variant="caption" color="text.secondary" fontWeight="medium">
+                                                                        AI Suggestions
+                                                                    </Typography>
+                                                                </Box>
+                                                            </>
+                                                        )}
+                                                        <Box
+                                                            onClick={() => handleResultClick(result)}
+                                                            sx={{
+                                                                p: 2,
+                                                                borderRadius: 2,
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s ease-in-out',
+                                                                '&:hover': {
+                                                                    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        fontWeight="medium"
+                                                                        sx={{
+                                                                            color: theme.palette.text.primary,
+                                                                            mb: 0.5,
+                                                                            overflow: 'hidden',
+                                                                            textOverflow: 'ellipsis',
+                                                                            whiteSpace: 'nowrap',
+                                                                            '&:hover': {
+                                                                                color: theme.palette.primary.main,
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        {result.title}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        variant="caption"
+                                                                        sx={{
+                                                                            color: theme.palette.text.secondary,
+                                                                            display: '-webkit-box',
+                                                                            WebkitLineClamp: 2,
+                                                                            WebkitBoxOrient: 'vertical',
+                                                                            overflow: 'hidden',
+                                                                            mb: result.metadata ? 0.5 : 0,
+                                                                        }}
+                                                                    >
+                                                                        {result.description}
+                                                                    </Typography>
+                                                                    {result.metadata && (
+                                                                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                                                                            {result.metadata.status && (
+                                                                                <Chip
+                                                                                    label={result.metadata.status.replace('_', ' ')}
+                                                                                    size="small"
+                                                                                    variant="outlined"
+                                                                                    sx={{ fontSize: '0.7rem', height: 18 }}
+                                                                                />
+                                                                            )}
+                                                                            {result.metadata.members !== undefined && (
+                                                                                <Chip
+                                                                                    label={`${result.metadata.members} members`}
+                                                                                    size="small"
+                                                                                    variant="outlined"
+                                                                                    sx={{ fontSize: '0.7rem', height: 18 }}
+                                                                                />
+                                                                            )}
+                                                                            {result.metadata.prize && (
+                                                                                <Chip
+                                                                                    label={`$${result.metadata.prize.toLocaleString()}`}
+                                                                                    size="small"
+                                                                                    variant="outlined"
+                                                                                    sx={{ fontSize: '0.7rem', height: 18 }}
+                                                                                />
+                                                                            )}
+                                                                        </Box>
+                                                                    )}
+                                                                </Box>
+                                                                <Chip
+                                                                    label={result.category}
+                                                                    size="small"
                                                                     sx={{
-                                                                        color: theme.palette.text.primary,
-                                                                        mb: 0.5,
-                                                                        overflow: 'hidden',
-                                                                        textOverflow: 'ellipsis',
-                                                                        whiteSpace: 'nowrap',
-                                                                        '&:hover': {
-                                                                            color: theme.palette.primary.main,
-                                                                        },
+                                                                        ml: 1,
+                                                                        ...getCategoryColor(result.category),
                                                                     }}
-                                                                >
-                                                                    {result.title}
-                                                                </Typography>
-                                                                <Typography
-                                                                    variant="caption"
-                                                                    sx={{
-                                                                        color: theme.palette.text.secondary,
-                                                                        display: '-webkit-box',
-                                                                        WebkitLineClamp: 2,
-                                                                        WebkitBoxOrient: 'vertical',
-                                                                        overflow: 'hidden',
-                                                                    }}
-                                                                >
-                                                                    {result.description}
-                                                                </Typography>
+                                                                />
                                                             </Box>
-                                                            <Chip
-                                                                label={result.category}
-                                                                size="small"
-                                                                sx={{
-                                                                    ml: 1,
-                                                                    ...getCategoryColor(result.category),
-                                                                }}
-                                                            />
                                                         </Box>
                                                     </Box>
                                                 ))}
@@ -336,10 +483,10 @@ const FloatingSearch: React.FC = () => {
                                                 <Search size={24} color={theme.palette.info.main} />
                                             </Box>
                                             <Typography variant="body2" fontWeight="medium" color="text.primary" sx={{ mb: 0.5 }}>
-                                                Start searching
+                                                Search with AI
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
-                                                Type to find tutorials, guides, and more
+                                                Find hackathons, teams, users, and get AI suggestions
                                             </Typography>
                                         </Box>
                                     )}

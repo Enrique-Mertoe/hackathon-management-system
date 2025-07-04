@@ -3,10 +3,26 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Box,
+  Button,
+  TextField,
+  Card,
+  CardContent,
+  Typography,
+  Container,
+  Alert,
+  Avatar,
+  useTheme,
+  alpha,
+  Paper,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Divider
+} from '@mui/material'
+import { PersonAdd as PersonAddIcon, Google as GoogleIcon } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 import Image from 'next/image'
 
@@ -98,86 +114,182 @@ export default function SignUpPage() {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const { error } = await auth.signInWithGoogle()
+      
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+      }
+      // Don't set loading to false here as user will be redirected
+    } catch (err) {
+      setError('An unexpected error occurred')
+      setLoading(false)
+    }
+  }
+
+  const theme = useTheme()
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md animate-fade-in">
-        <Card className="shadow-2xl border-0 rounded-2xl p-4 !bg-black/70">
-          <CardHeader>
-            <div className="flex flex-col items-center mb-2">
-              <Image src="/logo.png" alt="HackHub Logo" width={100} height={100} className="mb-4 rounded-full shadow-lg" />
-            </div>
-            <CardTitle className="text-center text-2xl font-bold">Create your account</CardTitle>
-            <CardDescription className="text-center">
-              Join HackHub to discover amazing hackathons
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-3">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+        px: 2,
+      }}
+    >
+      <Container maxWidth="xs">
+        <Paper
+          elevation={12}
+          sx={{
+            borderRadius: 2,
+            overflow: 'hidden',
+            background: alpha(theme.palette.background.paper, 0.9),
+            backdropFilter: 'blur(20px)',
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          }}
+        >
+          <Box sx={{ p: 3 }}>
+            {/* Logo and Header */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+              <Avatar
+                sx={{
+                  width: 60,
+                  height: 60,
+                  mb: 2,
+                  backgroundColor: theme.palette.primary.main,
+                  boxShadow: theme.shadows[6],
+                }}
+              >
+                <Image src="/logo-favicon.ico" alt="HackHub Logo" width={40} height={40} />
+              </Avatar>
+              <Typography variant="h5" fontWeight="bold" color="text.primary" gutterBottom>
+                Create your account
+              </Typography>
+              <Typography variant="body1" color="text.secondary" textAlign="center">
+                Join HackHub to discover amazing hackathons
+              </Typography>
+            </Box>
+
+            {/* Form */}
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
               {error && (
-                <div className={`p-3 rounded text-sm font-medium mb-2 ${
-                  isRateLimited 
-                    ? 'bg-warning/10 border border-warning/20 text-warning' 
-                    : 'bg-destructive/10 border border-destructive/20 text-destructive'
-                }`}>
+                <Alert 
+                  severity={isRateLimited ? "warning" : "error"} 
+                  sx={{ mb: 2 }}
+                >
                   {error}
                   {isRateLimited && (
-                    <div className="mt-2 text-xs">
+                    <Typography variant="caption" display="block" sx={{ mt: 1 }}>
                       ⏱️ You can try again in {rateLimitCountdown} seconds
-                    </div>
+                    </Typography>
                   )}
-                </div>
+                </Alert>
               )}
-              <Input
+              
+              <TextField
+                fullWidth
                 name="fullName"
+                label="Full Name"
                 value={formData.fullName}
                 onChange={handleChange}
-                placeholder="Enter your full name"
                 required
+                size="small"
+                sx={{ mb: 2 }}
+                variant="outlined"
               />
-              <Input
+              
+              <TextField
+                fullWidth
                 name="username"
+                label="Username"
                 value={formData.username}
                 onChange={handleChange}
-                placeholder="Choose a username"
                 required
+                size="small"
+                sx={{ mb: 2 }}
+                variant="outlined"
               />
-              <Input
+              
+              <TextField
+                fullWidth
                 type="email"
                 name="email"
+                label="Email Address"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="Enter your email"
                 required
+                size="small"
+                sx={{ mb: 2 }}
+                variant="outlined"
               />
-              <Select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="PARTICIPANT">Participant</option>
-                <option value="ORGANIZER">Organizer</option>
-                <option value="MENTOR">Mentor</option>
-              </Select>
-              <Input
+              
+              <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                <InputLabel id="role-label">Role</InputLabel>
+                <Select
+                  labelId="role-label"
+                  name="role"
+                  value={formData.role}
+                  label="Role"
+                  onChange={handleChange}
+                >
+                  <MenuItem value="PARTICIPANT">Participant</MenuItem>
+                  <MenuItem value="ORGANIZER">Organizer</MenuItem>
+                  <MenuItem value="MENTOR">Mentor</MenuItem>
+                </Select>
+              </FormControl>
+              
+              <TextField
+                fullWidth
                 type="password"
                 name="password"
+                label="Password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Create a password"
                 required
+                size="small"
+                sx={{ mb: 2 }}
+                variant="outlined"
               />
-              <Input
+              
+              <TextField
+                fullWidth
                 type="password"
                 name="confirmPassword"
+                label="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder="Confirm your password"
                 required
+                size="small"
+                sx={{ mb: 3 }}
+                variant="outlined"
               />
+              
               <Button
                 type="submit"
-                className="w-full py-2 text-base rounded-lg shadow-md hover:shadow-lg transition"
+                fullWidth
+                variant="contained"
+                size="medium"
                 disabled={loading || isRateLimited}
+                sx={{
+                  py: 1,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  boxShadow: theme.shadows[3],
+                  '&:hover': {
+                    boxShadow: theme.shadows[6],
+                  },
+                  mb: 2,
+                }}
               >
                 {loading 
                   ? 'Creating account...' 
@@ -186,18 +298,61 @@ export default function SignUpPage() {
                     : 'Create Account'
                 }
               </Button>
-            </form>
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
+
+              {/* Divider */}
+              <Box sx={{ display: 'flex', alignItems: 'center', my: 2 }}>
+                <Divider sx={{ flex: 1 }} />
+                <Typography variant="caption" color="text.secondary" sx={{ px: 2 }}>
+                  or
+                </Typography>
+                <Divider sx={{ flex: 1 }} />
+              </Box>
+
+              {/* Google Sign In */}
+              <Button
+                fullWidth
+                variant="outlined"
+                size="medium"
+                disabled={loading || isRateLimited}
+                startIcon={<GoogleIcon />}
+                onClick={handleGoogleSignIn}
+                sx={{
+                  py: 1,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  borderColor: theme.palette.divider,
+                  color: theme.palette.text.primary,
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                  },
+                }}
+              >
+                Continue with Google
+              </Button>
+            </Box>
+
+            {/* Links */}
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Typography variant="caption" color="text.secondary">
                 Already have an account?{' '}
-                <Link href="/auth/signin" className="text-primary font-semibold hover:underline">
+                <Link 
+                  href="/auth/signin" 
+                  style={{ 
+                    color: theme.palette.primary.main, 
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                  }}
+                >
                   Sign in
                 </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   )
 }
