@@ -298,7 +298,7 @@ export default function CreateHackathonPage() {
             formData.registration_end !== null &&
             formData.start_date !== null &&
             formData.end_date !== null &&
-            formData.min_team_size.trim() !== '' &&
+            formData.min_team_size?.trim() !== '' &&
             formData.max_team_size.trim() !== ''
         )
     }

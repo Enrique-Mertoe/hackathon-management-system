@@ -26,8 +26,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    if (!type || !['poster', 'avatar', 'document'].includes(type)) {
+    if (!type || !['hackathon-poster',"poster", 'avatar', 'document'].includes(type)) {
       return NextResponse.json(
         { error: 'Invalid file type. Must be poster, avatar, or document' },
         { status: 400 }
@@ -46,6 +45,7 @@ export async function POST(request: NextRequest) {
     // Validate file type
     const allowedTypes = {
       poster: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+      "hackathon-poster": ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
       avatar: ['image/jpeg', 'image/png', 'image/webp'],
       document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
     }

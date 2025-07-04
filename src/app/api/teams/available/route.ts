@@ -1,11 +1,12 @@
 import {NextRequest, NextResponse} from 'next/server'
-import {supabase} from '@/lib/supabase'
+import { supabase } from '@/lib/supabase.server'
 import {auth} from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
     try {
+        const sb = await supabase()
         // Get current user
-        const {user, error: authError} = await auth.getSession()
+        const {user, error: authError} = await auth.getSession(sb)
         if (authError || !user) {
             return NextResponse.json(
                 {error: 'Unauthorized'},
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
         const status = url.searchParams.get('status')
 
         // Build query for teams looking for members
-        let query = supabase
+        let query = sb
             .from('teams')
             .select(`
         id,
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
         let memberCounts: Record<string, number> = {}
 
         if (teamIds.length > 0) {
-            const {data: memberCountData} = await supabase
+            const {data: memberCountData} = await sb
                 .from('team_members')
                 .select('team_id')
                 .in('team_id', teamIds)
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Check which teams the current user is already a member of
-        const {data: userMemberships} = await supabase
+        const {data: userMemberships} = await sb
             .from('team_members')
             .select('team_id')
             .eq('user_id', user.id)
@@ -126,7 +127,7 @@ export async function GET(request: NextRequest) {
             || []
 
         // Get total count for pagination
-        const {count: totalCount} = await supabase
+        const {count: totalCount} = await sb
             .from('teams')
             .select('*', {count: 'exact', head: true})
             .eq('looking_for_members', true)

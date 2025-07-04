@@ -112,6 +112,7 @@ export default function EditHackathonPage() {
 
   const [posterFile, setPosterFile] = useState<File | null>(null)
   const [posterPreview, setPosterPreview] = useState<string | null>(null)
+  const [posterUploading, setPosterUploading] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -136,41 +137,68 @@ export default function EditHackathonPage() {
 
   const fetchHackathon = async () => {
     try {
-      // Mock data - replace with actual API call
-      const mockHackathon: EditHackathon = {
-        id: params.id as string,
-        title: 'AI Innovation Challenge',
-        description: 'Build innovative AI solutions that solve real-world problems',
-        theme: 'Artificial Intelligence',
-        difficulty_level: 'INTERMEDIATE',
-        registration_start: '2024-02-01T09:00',
-        registration_end: '2024-02-10T23:59',
-        start_date: '2024-02-15T10:00',
-        end_date: '2024-02-17T18:00',
-        timezone: 'UTC',
-        location: 'Virtual Event',
-        is_virtual: true,
-        max_participants: '200',
-        min_team_size: '2',
-        max_team_size: '4',
-        prize_pool: '10000',
-        rules: 'Standard hackathon rules apply...',
-        poster_url: '',
-        requirements: {
-          skills: ['Python', 'Machine Learning'],
-          tools: ['Jupyter', 'TensorFlow'],
-          experience_level: 'Intermediate'
+      const response = await fetch(`/api/hackathons/${params.id}`)
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError('Hackathon not found')
+        } else if (response.status === 403) {
+          setError('Access denied - You can only edit your own hackathons')
+        } else {
+          setError('Failed to load hackathon data')
+        }
+        return
+      }
+
+      const hackathon = await response.json()
+      
+      // Convert dates to local datetime format for input fields
+      const formatDateForInput = (dateString: string) => {
+        const date = new Date(dateString)
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        return `${year}-${month}-${day}T${hours}:${minutes}`
+      }
+
+      const editData: EditHackathon = {
+        id: hackathon.id,
+        title: hackathon.title || '',
+        description: hackathon.description || '',
+        theme: hackathon.theme || '',
+        difficulty_level: hackathon.difficulty_level || 'INTERMEDIATE',
+        registration_start: hackathon.registration_start ? formatDateForInput(hackathon.registration_start) : '',
+        registration_end: hackathon.registration_end ? formatDateForInput(hackathon.registration_end) : '',
+        start_date: hackathon.start_date ? formatDateForInput(hackathon.start_date) : '',
+        end_date: hackathon.end_date ? formatDateForInput(hackathon.end_date) : '',
+        timezone: hackathon.timezone || 'UTC',
+        location: hackathon.location || '',
+        is_virtual: hackathon.is_virtual !== false,
+        max_participants: hackathon.max_participants ? String(hackathon.max_participants) : '',
+        min_team_size: hackathon.min_team_size ? String(hackathon.min_team_size) : '1',
+        max_team_size: hackathon.max_team_size ? String(hackathon.max_team_size) : '5',
+        prize_pool: hackathon.prize_pool ? String(hackathon.prize_pool) : '',
+        rules: hackathon.rules || '',
+        poster_url: hackathon.poster_url || '',
+        requirements: hackathon.requirements || {
+          skills: [],
+          tools: [],
+          experience_level: 'Any'
         },
-        judging_criteria: {
-          innovation: 30,
-          technical_implementation: 30,
-          design: 20,
-          presentation: 20
+        judging_criteria: hackathon.judging_criteria || {
+          innovation: 25,
+          technical_implementation: 25,
+          design: 25,
+          presentation: 25
         }
       }
-      setFormData(mockHackathon)
-      if (mockHackathon.poster_url) {
-        setPosterPreview(mockHackathon.poster_url)
+
+      setFormData(editData)
+      
+      if (editData.poster_url) {
+        setPosterPreview(editData.poster_url)
       }
     } catch (error) {
       console.error('Error fetching hackathon:', error)
@@ -209,8 +237,34 @@ export default function EditHackathonPage() {
     setError('')
 
     try {
+      let posterUrl = formData.poster_url
+
+      // Upload poster if a new file is selected
+      if (posterFile) {
+        setPosterUploading(true)
+        const posterFormData = new FormData()
+        posterFormData.append('file', posterFile)
+        posterFormData.append('type', 'hackathon-poster')
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: posterFormData
+        })
+
+        setPosterUploading(false)
+
+        if (uploadResponse.ok) {
+          const uploadData = await uploadResponse.json()
+          posterUrl = uploadData.url
+        } else {
+          const errorData = await uploadResponse.json()
+          throw new Error(errorData.error || 'Failed to upload poster')
+        }
+      }
+
       const hackathonData = {
         ...formData,
+        poster_url: posterUrl,
         max_participants: formData.max_participants ? parseInt(formData.max_participants) : null,
         min_team_size: parseInt(formData.min_team_size),
         max_team_size: parseInt(formData.max_team_size),
@@ -235,7 +289,7 @@ export default function EditHackathonPage() {
         setError(data.error || 'Failed to update hackathon')
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -490,18 +544,26 @@ export default function EditHackathonPage() {
                     <Button
                       variant="outlined"
                       component="label"
-                      startIcon={<UploadIcon />}
+                      startIcon={posterUploading ? <CircularProgress size={16} /> : <UploadIcon />}
                       fullWidth
                       size="small"
+                      disabled={posterUploading || loading}
                     >
-                      {posterPreview ? 'Change Poster' : 'Upload Poster'}
+                      {posterUploading ? 'Uploading...' : (posterPreview ? 'Change Poster' : 'Upload Poster')}
                       <input
                         type="file"
                         hidden
                         accept="image/*"
                         onChange={handlePosterUpload}
+                        disabled={posterUploading || loading}
                       />
                     </Button>
+                    
+                    {posterFile && (
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        Selected: {posterFile.name}
+                      </Typography>
+                    )}
                   </Box>
                 </Grid>
               </Grid>

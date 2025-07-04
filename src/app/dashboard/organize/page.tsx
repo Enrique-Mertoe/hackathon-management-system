@@ -16,7 +16,11 @@ import {
   useTheme,
   useMediaQuery,
   Avatar,
-  InputAdornment
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -25,10 +29,12 @@ import {
   EmojiEvents as PrizeIcon,
   Visibility as ViewIcon,
   Settings as ManageIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  AutoAwesome as AIIcon
 } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
+import { ModernCopilot } from '@/components/ai/modern-copilot'
 
 interface Hackathon {
   id: string
@@ -51,6 +57,8 @@ export default function OrganizePage() {
   const [hackathons, setHackathons] = useState<Hackathon[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
+  const [copilotOpen, setCopilotOpen] = useState(false)
   const router = useRouter()
   const theme = useTheme()
   const isSmall = useMediaQuery(theme.breakpoints.down('sm'))
@@ -78,12 +86,12 @@ export default function OrganizePage() {
 
   const fetchMyHackathons = async (organizerId: string) => {
     try {
-      // Fetch only hackathons created by this organizer
-      const response = await fetch(`/api/hackathons?limit=50&organizer_id=${organizerId}`)
+      // Fetch ALL hackathons created by this organizer (including drafts)
+      const response = await fetch(`/api/hackathons?limit=50&organizer_id=${organizerId}&organise=true`)
       const data = await response.json()
 
       if (response.ok) {
-        // API already filters by organizer_id, so we can directly use the results
+        // API already filters by organizer_id and includes all statuses when organise=true
         setHackathons(data.hackathons || [])
       } else {
         console.error('Error fetching hackathons:', data.error)
@@ -115,10 +123,12 @@ export default function OrganizePage() {
     })
   }
 
-  const filteredHackathons = hackathons.filter(hackathon =>
-    hackathon.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    hackathon.description.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredHackathons = hackathons.filter(hackathon => {
+    const matchesSearch = hackathon.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         hackathon.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === 'ALL' || hackathon.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
 
   if (loading) {
     return (
@@ -165,15 +175,25 @@ export default function OrganizePage() {
                 Create and manage your hackathon events
               </Typography>
             </Box>
-            <Button
-              variant="contained"
-              size={isSmall ? "medium" : "large"}
-              startIcon={<AddIcon />}
-              onClick={() => router.push('/dashboard/organize/create')}
-              sx={{ alignSelf: { xs: 'stretch', sm: 'center' } }}
-            >
-              Create New Hackathon
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1, alignSelf: { xs: 'stretch', sm: 'center' } }}>
+              <Button
+                variant="outlined"
+                size={isSmall ? "medium" : "large"}
+                startIcon={<AIIcon />}
+                onClick={() => setCopilotOpen(true)}
+                sx={{ minWidth: 'auto' }}
+              >
+                {isSmall ? '' : 'AI Analytics'}
+              </Button>
+              <Button
+                variant="contained"
+                size={isSmall ? "medium" : "large"}
+                startIcon={<AddIcon />}
+                onClick={() => router.push('/dashboard/organize/create')}
+              >
+                Create New Hackathon
+              </Button>
+            </Box>
           </Box>
         </Box>
 
@@ -205,7 +225,7 @@ export default function OrganizePage() {
                   Active Events
                 </Typography>
                 <Typography variant={isSmall ? "h5" : "h4"} fontWeight="bold" color="success.main">
-                  {hackathons.filter(h => ['REGISTRATION_OPEN', 'ACTIVE'].includes(h.status)).length}
+                  {hackathons.filter(h => ['REGISTRATION_OPEN', 'ACTIVE', 'JUDGING'].includes(h.status)).length}
                 </Typography>
               </CardContent>
             </Card>
@@ -246,23 +266,47 @@ export default function OrganizePage() {
 
         {/* Search and Filters */}
         <Box sx={{ mb: { xs: 2, md: 3 } }}>
-          <TextField
-            placeholder="Search your hackathons..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            variant="outlined"
-            size={isSmall ? "small" : "medium"}
-            sx={{ maxWidth: { xs: '100%', sm: 400 } }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                )
-              }
-            }}
-          />
+          <Grid container spacing={2} alignItems="center">
+            <Grid size={{ xs: 12, sm: 8, md: 6 }}>
+              <TextField
+                placeholder="Search your hackathons..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                variant="outlined"
+                size={isSmall ? "small" : "medium"}
+                fullWidth
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: 'text.secondary' }} />
+                      </InputAdornment>
+                    )
+                  }
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+              <FormControl fullWidth size={isSmall ? "small" : "medium"}>
+                <InputLabel>Filter by Status</InputLabel>
+                <Select
+                  value={statusFilter}
+                  label="Filter by Status"
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <MenuItem value="ALL">All Statuses</MenuItem>
+                  <MenuItem value="DRAFT">Draft</MenuItem>
+                  <MenuItem value="PUBLISHED">Published</MenuItem>
+                  <MenuItem value="REGISTRATION_OPEN">Registration Open</MenuItem>
+                  <MenuItem value="REGISTRATION_CLOSED">Registration Closed</MenuItem>
+                  <MenuItem value="ACTIVE">Active</MenuItem>
+                  <MenuItem value="JUDGING">Judging</MenuItem>
+                  <MenuItem value="COMPLETED">Completed</MenuItem>
+                  <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
         </Box>
 
         {/* Hackathons List */}
@@ -279,21 +323,26 @@ export default function OrganizePage() {
                   fontSize: '2rem'
                 }}
               >
-                🚀
+                {hackathons.length === 0 ? '🚀' : '🔍'}
               </Avatar>
               <Typography variant="h6" fontWeight="semibold" gutterBottom>
-                No hackathons yet
+                {hackathons.length === 0 ? 'No hackathons yet' : 'No hackathons match your filters'}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Create your first hackathon to get started with organizing amazing events.
+                {hackathons.length === 0 
+                  ? 'Create your first hackathon to get started with organizing amazing events.'
+                  : 'Try adjusting your search terms or filters to find the hackathons you\'re looking for.'
+                }
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => router.push('/dashboard/organize/create')}
-              >
-                Create Your First Hackathon
-              </Button>
+              {hackathons.length === 0 && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => router.push('/dashboard/organize/create')}
+                >
+                  Create Your First Hackathon
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -400,6 +449,17 @@ export default function OrganizePage() {
           </Grid>
         )}
       </Container>
+
+      {/* AI Copilot */}
+      <ModernCopilot
+        isOpen={copilotOpen}
+        onClose={() => setCopilotOpen(false)}
+        currentUser={user}
+        page="organizer-dashboard"
+        data={{
+          hackathons: hackathons
+        }}
+      />
     </Box>
   )
 }

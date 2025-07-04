@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase.server'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
+    const sb = await supabase()
     // Get current user
-    const { user, error: authError } = await auth.getSession()
+    const { user, error: authError } = await auth.getSession(sb)
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get organizer's hackathons
-    const { data: hackathons, error: hackathonsError } = await supabase
+    const { data: hackathons, error: hackathonsError } = await sb
       .from('hackathons')
       .select(`
         id,
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
     // Get completion rates
     let completionRate = 0
     if (hackathonIds.length > 0) {
-      const { data: completionData } = await supabase
+      const { data: completionData } = await sb
         .from('hackathon_registrations')
         .select('completed')
         .in('hackathon_id', hackathonIds)
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
     // Get average rating
     let avgRating = 0
     if (hackathonIds.length > 0) {
-      const { data: ratingData } = await supabase
+      const { data: ratingData } = await sb
         .from('participant_feedback')
         .select('rating')
         .in('hackathon_id', hackathonIds)
@@ -149,7 +150,7 @@ export async function GET(request: NextRequest) {
     // Get ratings for top hackathons
     if (topHackathons.length > 0) {
       const topHackathonIds = topHackathons.map(h => h.id)
-      const { data: topRatings } = await supabase
+      const { data: topRatings } = await sb
         .from('participant_feedback')
         .select('hackathon_id, rating')
         .in('hackathon_id', topHackathonIds)
@@ -171,7 +172,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get recent engagement metrics
-    const { data: recentViews } = await supabase
+    const { data: recentViews } = await sb
       .from('hackathon_views')
       .select('viewed_at')
       .in('hackathon_id', hackathonIds)

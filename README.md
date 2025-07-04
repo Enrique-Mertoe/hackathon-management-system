@@ -1,6 +1,8 @@
 # HackHub - Hackathon Management System
 
 A comprehensive platform for discovering hackathons, building teams, and advancing careers through competitive programming and innovation challenges.
+### Responsive Design & Mobile Experience
+![Responsive Design Across Devices](screenshots/h2.png)
 
 ## 🚀 Features
 
@@ -128,15 +130,21 @@ HackHub features a fully responsive design that adapts seamlessly across desktop
 - Access participant analytics
 - Manage communications and updates
 
-### Mentor
-- Guide participants during hackathons
-- Provide expertise and resources
-- Support team development
+[//]: # (### Mentor)
 
-### Judge
-- Evaluate hackathon submissions
-- Provide feedback and scoring
-- Participate in judging workflows
+[//]: # (- Guide participants during hackathons)
+
+[//]: # (- Provide expertise and resources)
+
+[//]: # (- Support team development)
+
+[//]: # (### Judge)
+
+[//]: # (- Evaluate hackathon submissions)
+
+[//]: # (- Provide feedback and scoring)
+
+[//]: # (- Participate in judging workflows)
 
 ### Admin
 - Platform administration
@@ -151,25 +159,35 @@ HackHub features a fully responsive design that adapts seamlessly across desktop
 - XSS protection
 - CSRF protection
 
-## 📚 API Documentation
+[//]: # (## 📚 API Documentation)
 
-### Authentication Endpoints
-- `POST /api/auth/signin` - User login
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/signout` - User logout
+[//]: # (### Authentication Endpoints)
 
-### Hackathon Endpoints
-- `GET /api/hackathons` - List hackathons with filters
-- `POST /api/hackathons` - Create new hackathon (organizers)
-- `GET /api/hackathons/[id]` - Get hackathon details
-- `PUT /api/hackathons/[id]` - Update hackathon (organizers)
+[//]: # (- `POST /api/auth/signin` - User login)
+
+[//]: # (- `POST /api/auth/signup` - User registration)
+
+[//]: # (- `POST /api/auth/signout` - User logout)
+
+[//]: # (### Hackathon Endpoints)
+
+[//]: # (- `GET /api/hackathons` - List hackathons with filters)
+
+[//]: # (- `POST /api/hackathons` - Create new hackathon &#40;organizers&#41;)
+
+[//]: # (- `GET /api/hackathons/[id]` - Get hackathon details)
+
+[//]: # (- `PUT /api/hackathons/[id]` - Update hackathon &#40;organizers&#41;)
 
 ## 🚢 Deployment
 
-### Environment Setup
-1. Set up production environment variables
-2. Configure Supabase for production
-3. Set up domain and SSL certificates
+[//]: # (### Environment Setup)
+
+[//]: # (1. Set up production environment variables)
+
+[//]: # (2. Configure Supabase for production)
+
+[//]: # (3. Set up domain and SSL certificates)
 
 ### Recommended Platforms
 - **Vercel** (recommended for Next.js)

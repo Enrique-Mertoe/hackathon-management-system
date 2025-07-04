@@ -66,8 +66,9 @@ export async function PUT(
   { params }: any
 ) {
   try {
+    const sb = await supabase()
     // Verify authentication
-    const user = await auth.getCurrentUser()
+    const user = await auth.getCurrentUser(sb)
     if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },

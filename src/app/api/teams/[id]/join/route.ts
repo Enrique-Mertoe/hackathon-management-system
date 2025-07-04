@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { auth } from '@/lib/auth'
-
+import { supabase } from '@/lib/supabase.server'
 export async function POST(
   request: NextRequest,
   { params }: any
 ) {
   try {
     const teamId = (await params).id
-
+    const sb = await supabase()
     // Get current user
-    const { user, error: authError } = await auth.getSession()
+    const { user, error: authError } = await auth.getSession(sb)
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -19,7 +18,7 @@ export async function POST(
     }
 
     // Check if team exists and is looking for members
-    const { data: team, error: teamError } = await supabase
+    const { data: team, error: teamError } = await sb
       .from('teams')
       .select(`
         id,
@@ -63,7 +62,7 @@ export async function POST(
     }
 
     // Check if user is already a member of this team
-    const { data: existingMembership } = await supabase
+    const { data: existingMembership } = await sb
       .from('team_members')
       .select('id')
       .eq('team_id', teamId)
@@ -78,7 +77,7 @@ export async function POST(
     }
 
     // Check if user is already in another team for this hackathon
-    const { data: existingTeamMembership } = await supabase
+    const { data: existingTeamMembership } = await sb
       .from('team_members')
       .select(`
         teams!inner(
@@ -96,7 +95,7 @@ export async function POST(
     }
 
     // Check current team size
-    const { data: currentMembers, count: memberCount } = await supabase
+    const { data: currentMembers, count: memberCount } = await sb
       .from('team_members')
       .select('*', { count: 'exact', head: true })
       .eq('team_id', teamId)
@@ -109,7 +108,7 @@ export async function POST(
     }
 
     // Check if user is registered for the hackathon
-    const { data: registration } = await supabase
+    const { data: registration } = await sb
       .from('hackathon_registrations')
       .select('id')
       .eq('hackathon_id', team.hackathon_id)
@@ -124,7 +123,7 @@ export async function POST(
     }
 
     // Add user to team
-    const { data: newMembership, error: joinError } = await supabase
+    const { data: newMembership, error: joinError } = await sb
       .from('team_members')
       .insert({
         team_id: teamId,
@@ -144,7 +143,7 @@ export async function POST(
     }
 
     // Update team registration to include team_id
-    await supabase
+    await sb
       .from('hackathon_registrations')
       .update({ team_id: teamId })
       .eq('hackathon_id', team.hackathon_id)
@@ -153,7 +152,7 @@ export async function POST(
     // Check if team is now full and update looking_for_members status
     const newMemberCount = (memberCount || 0) + 1
     if (newMemberCount >= team.max_team_size) {
-      await supabase
+      await sb
         .from('teams')
         .update({ 
           looking_for_members: false,

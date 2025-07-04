@@ -34,12 +34,17 @@ import {
     People as ParticipantsIcon,
     Assessment as AnalyticsIcon,
     Announcement as AnnouncementIcon,
-    Publish as PublishIcon
+    Publish as PublishIcon,
+    PlayArrow as OpenRegistrationIcon,
+    Stop as CloseRegistrationIcon,
+    Launch as ActivateIcon,
+    Gavel as JudgingIcon,
+    CheckCircle as CompleteIcon,
+    Cancel as CancelIcon
 } from '@mui/icons-material'
 import {auth} from '@/lib/auth'
 import type {AuthUser} from '@/lib/auth'
-import {CopilotSidepanel} from '@/components/ai/copilot-sidepanel'
-import type {FormSuggestion} from '@/components/ai/copilot-sidepanel'
+import {ModernCopilot} from '@/components/ai/modern-copilot'
 import PublishPaymentDialog from "@/components/ui/PaymentPublish";
 
 interface Hackathon {
@@ -85,6 +90,7 @@ export default function OrganizeHackathonPage() {
     const [analysisMode, setAnalysisMode] = useState(false)
     const [publishing, setPublishing] = useState(false)
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+    const [updatingStatus, setUpdatingStatus] = useState(false)
 
     useEffect(() => {
         const getUser = async () => {
@@ -141,11 +147,7 @@ export default function OrganizeHackathonPage() {
         setCopilotOpen(true)
     }
 
-    const handleApplySuggestions = (suggestions: FormSuggestion[]) => {
-        // For analysis mode, we might want to handle suggestions differently
-        // For now, we'll log them
-        console.log('Analysis suggestions received:', suggestions)
-    }
+    // Remove the old handleApplySuggestions function as it's not needed for the new system
 
     const handleRegistrations = () => {
         router.push(`/dashboard/participants?hackathon=${hackathon?.id}`)
@@ -206,6 +208,35 @@ export default function OrganizeHackathonPage() {
         publishHackathon()
     }
 
+    const handleStatusUpdate = async (newStatus: string) => {
+        if (!hackathon) return
+
+        setUpdatingStatus(true)
+        try {
+            const response = await fetch(`/api/hackathons/${hackathon.id}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                setHackathon(prev => prev ? {...prev, status: newStatus} : null)
+                // Optionally show success message
+            } else {
+                const data = await response.json()
+                setError(data.error || 'Failed to update hackathon status')
+            }
+        } catch (error) {
+            console.error('Error updating hackathon status:', error)
+            setError('Failed to update hackathon status')
+        } finally {
+            setUpdatingStatus(false)
+        }
+    }
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'DRAFT':
@@ -226,6 +257,59 @@ export default function OrganizeHackathonPage() {
                 return {color: 'error' as const}
             default:
                 return {color: 'default' as const}
+        }
+    }
+
+    const getNextStatusAction = (currentStatus: string) => {
+        const now = new Date()
+        if (!hackathon) return null
+
+        const registrationEnd = new Date(hackathon.registration_end)
+        const eventStart = new Date(hackathon.start_date)
+
+        switch (currentStatus) {
+            case 'PUBLISHED':
+                return {
+                    status: 'REGISTRATION_OPEN',
+                    label: 'Open Registration',
+                    icon: <OpenRegistrationIcon />,
+                    color: 'success' as const,
+                    disabled: now > registrationEnd
+                }
+            case 'REGISTRATION_OPEN':
+                return {
+                    status: 'REGISTRATION_CLOSED',
+                    label: 'Close Registration',
+                    icon: <CloseRegistrationIcon />,
+                    color: 'warning' as const,
+                    disabled: false
+                }
+            case 'REGISTRATION_CLOSED':
+                return {
+                    status: 'ACTIVE',
+                    label: 'Activate Event',
+                    icon: <ActivateIcon />,
+                    color: 'secondary' as const,
+                    disabled: now < eventStart
+                }
+            case 'ACTIVE':
+                return {
+                    status: 'JUDGING',
+                    label: 'Start Judging',
+                    icon: <JudgingIcon />,
+                    color: 'primary' as const,
+                    disabled: false
+                }
+            case 'JUDGING':
+                return {
+                    status: 'COMPLETED',
+                    label: 'Complete Event',
+                    icon: <CompleteIcon />,
+                    color: 'success' as const,
+                    disabled: false
+                }
+            default:
+                return null
         }
     }
 
@@ -426,6 +510,94 @@ export default function OrganizeHackathonPage() {
                         Your hackathon is currently saved as a draft and is not visible to participants. Click "Publish"
                         to make it discoverable on the platform.
                     </Alert>
+                )}
+
+                {/* Status Management */}
+                {hackathon.status !== 'DRAFT' && hackathon.status !== 'COMPLETED' && hackathon.status !== 'CANCELLED' && (
+                    <Card sx={{ mb: {xs: 2, md: 3}, borderRadius: 2, boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px' }}>
+                        <CardContent sx={{ p: {xs: 2, md: 3} }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexDirection: {xs: 'column', sm: 'row'}, gap: 2 }}>
+                                <Box>
+                                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                        Event Management
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Current Status: <strong>{hackathon.status.replace('_', ' ')}</strong>
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                    {(() => {
+                                        const nextAction = getNextStatusAction(hackathon.status)
+                                        return nextAction ? (
+                                            <Button
+                                                variant="contained"
+                                                color={nextAction.color}
+                                                startIcon={nextAction.icon}
+                                                onClick={() => handleStatusUpdate(nextAction.status)}
+                                                disabled={updatingStatus || nextAction.disabled}
+                                                size={isSmall ? "small" : "medium"}
+                                                sx={{
+                                                    boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px'
+                                                }}
+                                            >
+                                                {updatingStatus ? 'Updating...' : nextAction.label}
+                                            </Button>
+                                        ) : null
+                                    })()}
+                                    
+                                    {/* Cancel button for non-completed events */}
+                                    {!['COMPLETED', 'CANCELLED'].includes(hackathon.status) && (
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<CancelIcon />}
+                                            onClick={() => handleStatusUpdate('CANCELLED')}
+                                            disabled={updatingStatus}
+                                            size={isSmall ? "small" : "medium"}
+                                        >
+                                            {updatingStatus ? 'Updating...' : 'Cancel Event'}
+                                        </Button>
+                                    )}
+                                </Box>
+                            </Box>
+                            
+                            {/* Additional status info */}
+                            {hackathon.status === 'PUBLISHED' && (
+                                <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
+                                    <AlertTitle>Ready to Open Registration</AlertTitle>
+                                    Your hackathon is published and visible to participants. Open registration to allow participants to sign up.
+                                </Alert>
+                            )}
+                            
+                            {hackathon.status === 'REGISTRATION_OPEN' && (
+                                <Alert severity="success" sx={{ mt: 2, borderRadius: 2 }}>
+                                    <AlertTitle>Registration is Open</AlertTitle>
+                                    Participants can now register for your hackathon. You can close registration manually or it will automatically close on {formatDate(hackathon.registration_end)}.
+                                </Alert>
+                            )}
+                            
+                            {hackathon.status === 'REGISTRATION_CLOSED' && (
+                                <Alert severity="warning" sx={{ mt: 2, borderRadius: 2 }}>
+                                    <AlertTitle>Registration is Closed</AlertTitle>
+                                    No more participants can register. You can activate the event when ready to begin.
+                                </Alert>
+                            )}
+                            
+                            {hackathon.status === 'ACTIVE' && (
+                                <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
+                                    <AlertTitle>Event is Active</AlertTitle>
+                                    Your hackathon is currently running. Participants are working on their projects.
+                                </Alert>
+                            )}
+                            
+                            {hackathon.status === 'JUDGING' && (
+                                <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
+                                    <AlertTitle>Judging Phase</AlertTitle>
+                                    The hackathon has ended and judging is in progress. Complete the event when judging is finished.
+                                </Alert>
+                            )}
+                        </CardContent>
+                    </Card>
                 )}
 
                 <Grid container spacing={{xs: 2, md: 3}}>
@@ -1087,17 +1259,18 @@ export default function OrganizeHackathonPage() {
             )}
 
 
-            {/* AI Copilot Sidepanel */}
-            <CopilotSidepanel
+            {/* AI Copilot */}
+            <ModernCopilot
                 isOpen={copilotOpen}
                 onClose={() => {
                     setCopilotOpen(false)
                     setAnalysisMode(false)
                 }}
                 currentUser={user}
-                onApplySuggestions={handleApplySuggestions}
-                formContext={hackathon}
-                analysisMode={analysisMode}
+                page="hackathon-management"
+                data={{
+                    hackathon: hackathon
+                }}
             />
         </Box>
     )

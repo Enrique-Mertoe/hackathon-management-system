@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase.server'
 import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
     // Get current user
-    const { user, error: authError } = await auth.getSession()
+    const sb = await supabase()
+    const { user, error: authError } = await auth.getSession(sb)
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's teams with hackathon details
-    const { data: teams, error } = await supabase
+    const { data: teams, error } = await sb
       .from('team_members')
       .select(`
         id,
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Get member counts for each team
     if (userTeams.length > 0) {
       const teamIds = userTeams.map(team => team.id)
-      const { data: memberCounts } = await supabase
+      const { data: memberCounts } = await sb
         .from('team_members')
         .select('team_id')
         .in('team_id', teamIds)
