@@ -49,7 +49,16 @@ interface AnalyticsData {
   avgRating: number
   popularThemes: string[]
   monthlyStats: { month: string; events: number; participants: number }[]
-  topHackathons: { name: string; participants: number; rating: number }[]
+  topHackathons: { name: string; participants: number; rating: number; views: number; id: string }[]
+  totalHackathons: number
+  weeklyViews: number
+  period: string
+  summary: {
+    totalEvents: number
+    activeEvents: number
+    completedEvents: number
+    draftEvents: number
+  }
 }
 
 export default function AnalyticsPage() {
@@ -82,27 +91,14 @@ export default function AnalyticsPage() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true)
-      // Mock data - replace with actual API call
-      const mockData: AnalyticsData = {
-        totalViews: 12450,
-        registrations: 847,
-        completionRate: 78,
-        avgRating: 4.6,
-        popularThemes: ['AI/ML', 'Web3', 'Sustainability', 'FinTech', 'HealthTech'],
-        monthlyStats: [
-          { month: 'Jan', events: 2, participants: 156 },
-          { month: 'Feb', events: 1, participants: 89 },
-          { month: 'Mar', events: 3, participants: 234 },
-          { month: 'Apr', events: 2, participants: 167 },
-          { month: 'May', events: 4, participants: 298 }
-        ],
-        topHackathons: [
-          { name: 'AI Innovation Challenge', participants: 156, rating: 4.8 },
-          { name: 'Sustainable Tech Hack', participants: 134, rating: 4.7 },
-          { name: 'FinTech Future', participants: 98, rating: 4.5 }
-        ]
+      
+      const response = await fetch('/api/analytics/organizer')
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data')
       }
-      setAnalytics(mockData)
+      
+      const data = await response.json()
+      setAnalytics(data)
     } catch (error) {
       console.error('Error fetching analytics:', error)
     } finally {
@@ -188,7 +184,7 @@ export default function AnalyticsPage() {
         {/* Key Metrics */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
+            <Card sx={{ boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px', borderRadius: 2 }}>
               <CardContent sx={{ p: 3, textAlign: 'center' }}>
                 <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48, mx: 'auto', mb: 2 }}>
                   <TrendingUpIcon />
@@ -204,7 +200,7 @@ export default function AnalyticsPage() {
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
+            <Card sx={{ boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px', borderRadius: 2 }}>
               <CardContent sx={{ p: 3, textAlign: 'center' }}>
                 <Avatar sx={{ bgcolor: 'success.main', width: 48, height: 48, mx: 'auto', mb: 2 }}>
                   <GroupIcon />
@@ -220,7 +216,7 @@ export default function AnalyticsPage() {
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
+            <Card sx={{ boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px', borderRadius: 2 }}>
               <CardContent sx={{ p: 3, textAlign: 'center' }}>
                 <Avatar sx={{ bgcolor: 'warning.main', width: 48, height: 48, mx: 'auto', mb: 2 }}>
                   <TimeIcon />
@@ -236,7 +232,7 @@ export default function AnalyticsPage() {
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
+            <Card sx={{ boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px', borderRadius: 2 }}>
               <CardContent sx={{ p: 3, textAlign: 'center' }}>
                 <Avatar sx={{ bgcolor: 'info.main', width: 48, height: 48, mx: 'auto', mb: 2 }}>
                   <TrophyIcon />
@@ -255,7 +251,7 @@ export default function AnalyticsPage() {
         <Grid container spacing={3}>
           {/* Popular Themes */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
+            <Card sx={{ boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px', borderRadius: 2 }}>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Popular Themes
@@ -277,33 +273,38 @@ export default function AnalyticsPage() {
 
           {/* Monthly Performance */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
+            <Card sx={{ boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px', borderRadius: 2 }}>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Monthly Performance
                 </Typography>
-                {analytics?.monthlyStats.map((stat, index) => (
-                  <Box key={index} sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="body2">{stat.month}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {stat.participants} participants
-                      </Typography>
+                {analytics?.monthlyStats.map((stat, index) => {
+                  const maxParticipants = Math.max(...(analytics?.monthlyStats.map(s => s.participants) || [1]))
+                  const progressValue = maxParticipants > 0 ? (stat.participants / maxParticipants) * 100 : 0
+                  
+                  return (
+                    <Box key={index} sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                        <Typography variant="body2">{stat.month}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {stat.participants} participants
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={progressValue}
+                        sx={{ height: 6, borderRadius: 3 }}
+                      />
                     </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={(stat.participants / 300) * 100}
-                      sx={{ height: 6, borderRadius: 3 }}
-                    />
-                  </Box>
-                ))}
+                  )
+                })}
               </CardContent>
             </Card>
           </Grid>
 
           {/* Top Performing Hackathons */}
           <Grid size={12}>
-            <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
+            <Card sx={{ boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px', borderRadius: 2 }}>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Top Performing Hackathons
