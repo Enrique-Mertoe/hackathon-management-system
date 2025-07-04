@@ -4,10 +4,10 @@ import { auth } from '@/lib/auth'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: any
 ) {
   try {
-    const teamId = params.id
+    const teamId = (await params).id
 
     // Get current user
     const { user, error: authError } = await auth.getSession()
