@@ -19,23 +19,34 @@ import {
   CircularProgress,
   useTheme,
   useMediaQuery,
-  Avatar,
-  Divider
+  Divider,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import {
   AutoAwesome as AIIcon,
   ArrowBack as BackIcon,
   PersonAdd as RegisterIcon,
+  PersonRemove as UnregisterIcon,
   Group as TeamIcon,
-  Event as EventIcon,
   LocationOn as LocationIcon,
   EmojiEvents as PrizeIcon,
-  AccessTime as TimeIcon,
   People as ParticipantsIcon,
   Share as ShareIcon,
-  BookmarkBorder as BookmarkIcon,
   Refresh as RefreshIcon,
-  Update as UpdateIcon
+  Update as UpdateIcon,
+  Twitter as TwitterIcon,
+  Facebook as FacebookIcon,
+  LinkedIn as LinkedInIcon,
+  ContentCopy as CopyIcon,
+  KeyboardArrowDown as ArrowDownIcon,
+  WhatsApp as WhatsAppIcon,
+  Telegram as TelegramIcon,
+  Reddit as RedditIcon
 } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
@@ -78,6 +89,10 @@ export default function PublicHackathonPage() {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [copilotOpen, setCopilotOpen] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
+  const [registrationLoading, setRegistrationLoading] = useState(false)
+  const [checkingRegistration, setCheckingRegistration] = useState(false)
+  const [shareMenuAnchor, setShareMenuAnchor] = useState<null | HTMLElement>(null)
+  const [snackbar, setSnackbar] = useState<{open: boolean, message: string, severity: 'success' | 'error'}>({open: false, message: '', severity: 'success'})
 
   // Use page cache for hackathon data
   const { 
@@ -114,39 +129,311 @@ export default function PublicHackathonPage() {
       try {
         const currentUser = await auth.getCurrentUser()
         setUser(currentUser)
+        
+        // Check registration status if user is logged in and hackathon is loaded
+        if (currentUser && params.id) {
+          await checkRegistrationStatus()
+        }
       } catch (error) {
         console.error('Error fetching user:', error)
       }
     }
 
     getUser()
-  }, [])
+  }, [params.id])
+
+  // Check registration status when hackathon data loads
+  useEffect(() => {
+    if (user && hackathon && !checkingRegistration) {
+      checkRegistrationStatus()
+    }
+  }, [user, hackathon])
+
+  // Update meta tags for social sharing
+  useEffect(() => {
+    if (hackathon) {
+      // Update page title
+      document.title = `${hackathon.title} | HackHub`
+      
+      // Update or create meta tags for social sharing
+      const updateMetaTag = (name: string, content: string, property?: boolean) => {
+        const selector = property ? `meta[property="${name}"]` : `meta[name="${name}"]`
+        let meta = document.querySelector(selector) as HTMLMetaElement
+        if (!meta) {
+          meta = document.createElement('meta')
+          if (property) {
+            meta.setAttribute('property', name)
+          } else {
+            meta.setAttribute('name', name)
+          }
+          document.head.appendChild(meta)
+        }
+        meta.setAttribute('content', content)
+      }
+      
+      // Basic meta tags
+      updateMetaTag('description', hackathon.description)
+      updateMetaTag('keywords', `hackathon, coding, competition, ${hackathon.theme}, programming`)
+      
+      // Open Graph tags
+      updateMetaTag('og:title', hackathon.title, true)
+      updateMetaTag('og:description', hackathon.description, true)
+      updateMetaTag('og:type', 'website', true)
+      updateMetaTag('og:url', window.location.href, true)
+      updateMetaTag('og:site_name', 'HackHub', true)
+      
+      // Add structured data for better engagement
+      const structuredDescription = `🚀 ${hackathon.title} • 💰 ${formatCurrency(hackathon.prize_pool || 0)} Prize Pool • 👥 ${hackathon.registration_count} Participants • 📅 ${formatDate(hackathon.start_date)} - ${formatDate(hackathon.end_date)}`
+      updateMetaTag('og:description', structuredDescription, true)
+      
+      if (hackathon.poster_url) {
+        updateMetaTag('og:image', hackathon.poster_url, true)
+        updateMetaTag('og:image:width', '1200', true)
+        updateMetaTag('og:image:height', '630', true)
+        updateMetaTag('og:image:alt', `${hackathon.title} - Hackathon Poster`, true)
+      }
+      
+      // Twitter Card tags
+      updateMetaTag('twitter:card', hackathon.poster_url ? 'summary_large_image' : 'summary')
+      updateMetaTag('twitter:title', hackathon.title)
+      updateMetaTag('twitter:description', structuredDescription)
+      updateMetaTag('twitter:site', '@HackHub')
+      
+      if (hackathon.poster_url) {
+        updateMetaTag('twitter:image', hackathon.poster_url)
+        updateMetaTag('twitter:image:alt', `${hackathon.title} - Hackathon Poster`)
+      }
+      
+      // Additional meta tags for better social sharing
+      updateMetaTag('article:author', 'HackHub')
+      updateMetaTag('article:section', 'Technology')
+      updateMetaTag('article:tag', `hackathon,coding,${hackathon.theme}`)
+    }
+  }, [hackathon])
+
+  const checkRegistrationStatus = async () => {
+    if (!user || !params.id) return
+    
+    setCheckingRegistration(true)
+    try {
+      const response = await fetch(`/api/hackathons/${params.id}/register`)
+      if (response.ok) {
+        const data = await response.json()
+        setIsRegistered(data.isRegistered)
+      }
+    } catch (error) {
+      console.error('Error checking registration status:', error)
+    } finally {
+      setCheckingRegistration(false)
+    }
+  }
 
   const handleAnalyzeWithAI = () => {
     setCopilotOpen(true)
   }
 
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!user) {
       router.push('/auth/signin')
       return
     }
-    // TODO: Implement registration logic
-    console.log('Register for hackathon')
+
+    if (!hackathon) return
+
+    setRegistrationLoading(true)
+    try {
+      const response = await fetch(`/api/hackathons/${params.id}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setIsRegistered(true)
+        setSnackbar({
+          open: true,
+          message: 'Successfully registered for hackathon!',
+          severity: 'success'
+        })
+        // Refresh hackathon data to get updated registration count
+        void mutate()
+      } else {
+        setSnackbar({
+          open: true,
+          message: data.error || 'Failed to register for hackathon',
+          severity: 'error'
+        })
+      }
+    } catch (error) {
+      console.error('Error registering for hackathon:', error)
+      setSnackbar({
+        open: true,
+        message: 'An error occurred while registering',
+        severity: 'error'
+      })
+    } finally {
+      setRegistrationLoading(false)
+    }
   }
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: hackathon?.title,
-        text: hackathon?.description,
-        url: window.location.href,
+  const handleUnregister = async () => {
+    if (!user || !hackathon) return
+
+    setRegistrationLoading(true)
+    try {
+      const response = await fetch(`/api/hackathons/${params.id}/register`, {
+        method: 'DELETE'
       })
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-      // TODO: Show toast notification
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setIsRegistered(false)
+        setSnackbar({
+          open: true,
+          message: 'Successfully unregistered from hackathon',
+          severity: 'success'
+        })
+        // Refresh hackathon data to get updated registration count
+        void mutate()
+      } else {
+        setSnackbar({
+          open: true,
+          message: data.error || 'Failed to unregister from hackathon',
+          severity: 'error'
+        })
+      }
+    } catch (error) {
+      console.error('Error unregistering from hackathon:', error)
+      setSnackbar({
+        open: true,
+        message: 'An error occurred while unregistering',
+        severity: 'error'
+      })
+    } finally {
+      setRegistrationLoading(false)
     }
+  }
+
+  const handleShareMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setShareMenuAnchor(event.currentTarget)
+  }
+
+  const handleShareMenuClose = () => {
+    setShareMenuAnchor(null)
+  }
+
+  const handleShare = async (platform: string) => {
+    if (!hackathon) return
+    
+    const url = window.location.href
+    const title = hackathon.title
+    const description = hackathon.description.length > 120 
+      ? hackathon.description.substring(0, 120) + '...' 
+      : hackathon.description
+    
+    // Enhanced text with more details
+    const basicText = `🚀 ${title}\n\n${description}\n\n💰 Prize Pool: ${formatCurrency(hackathon.prize_pool || 0)}\n👥 ${hackathon.registration_count} participants registered\n\n#hackathon #coding #innovation`
+    
+    // Shortened text for platforms with character limits
+    const shortText = `🚀 ${title} - ${formatCurrency(hackathon.prize_pool || 0)} prize pool! Join ${hackathon.registration_count} developers in this exciting hackathon! #hackathon #coding`
+    
+    let shareUrl = ''
+    
+    switch (platform) {
+      case 'twitter':
+        // Twitter has 280 character limit, so use shorter text
+        const twitterText = shortText.length > 240 ? shortText.substring(0, 240) + '...' : shortText
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}&url=${encodeURIComponent(url)}`
+        
+        // If there's a poster image, add it as a media parameter (Twitter will fetch it from the URL's Open Graph tags)
+        if (hackathon.poster_url) {
+          shareUrl += `&via=HackHub`
+        }
+        break
+        
+      case 'facebook':
+        // Facebook automatically fetches Open Graph data including images
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+        
+        // Add quote parameter for better engagement
+        const facebookQuote = `${title} - ${description}`
+        shareUrl += `&quote=${encodeURIComponent(facebookQuote)}`
+        break
+        
+      case 'linkedin':
+        // LinkedIn also uses Open Graph data, but we can add summary and source
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
+        shareUrl += `&summary=${encodeURIComponent(description)}`
+        shareUrl += `&source=HackHub`
+        break
+        
+      case 'copy':
+        // Enhanced copy format with all details
+        const copyText = `${title}\n\n${hackathon.description}\n\n🎯 Theme: ${hackathon.theme}\n💰 Prize Pool: ${formatCurrency(hackathon.prize_pool || 0)}\n👥 ${hackathon.registration_count} participants\n📅 ${formatDate(hackathon.start_date)} - ${formatDate(hackathon.end_date)}\n\n${url}`
+        
+        void navigator.clipboard.writeText(copyText).then(() => {
+          setSnackbar({
+            open: true,
+            message: 'Hackathon details copied to clipboard!',
+            severity: 'success'
+          })
+        })
+        handleShareMenuClose()
+        return
+        
+      case 'native':
+        if (navigator.share) {
+          const shareData: ShareData = {
+            title: title,
+            text: basicText,
+            url: url,
+          }
+          
+          // Try to include image file if available and supported
+          if (hackathon.poster_url && 'files' in navigator.share) {
+            try {
+              const response = await fetch(hackathon.poster_url)
+              const blob = await response.blob()
+              const file = new File([blob], 'hackathon-poster.jpg', { type: blob.type })
+              shareData.files = [file]
+            } catch (error) {
+              console.warn('Could not include image in native share:', error)
+            }
+          }
+          
+          void navigator.share(shareData)
+        }
+        handleShareMenuClose()
+        return
+        
+      case 'whatsapp':
+        // WhatsApp sharing with formatted text
+        const whatsappText = `🚀 *${title}*\n\n${description}\n\n💰 Prize Pool: *${formatCurrency(hackathon.prize_pool || 0)}*\n👥 ${hackathon.registration_count} participants registered\n📅 ${formatDate(hackathon.start_date)}\n\n${url}`
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`
+        break
+        
+      case 'telegram':
+        // Telegram sharing
+        const telegramText = `🚀 ${title}\n\n${description}\n\n💰 Prize Pool: ${formatCurrency(hackathon.prize_pool || 0)}\n👥 ${hackathon.registration_count} participants\n\n${url}`
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(telegramText)}`
+        break
+        
+      case 'reddit':
+        // Reddit sharing
+        shareUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(`🚀 ${title} - ${formatCurrency(hackathon.prize_pool || 0)} Prize Pool!`)}`
+        break
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400')
+    }
+    
+    handleShareMenuClose()
   }
 
   const getStatusColor = (status: string) => {
@@ -181,8 +468,27 @@ export default function PublicHackathonPage() {
   }
 
   const canRegister = () => {
-    if (!hackathon) return false
+    if (!hackathon || !user) return false
     return hackathon.status === 'REGISTRATION_OPEN' && !isRegistered
+  }
+
+  const getRegistrationButtonText = () => {
+    if (!user) return 'Sign In to Register'
+    if (checkingRegistration) return 'Checking...'
+    if (registrationLoading) return isRegistered ? 'Unregistering...' : 'Registering...'
+    if (isRegistered) return 'Unregister'
+    if (hackathon?.status !== 'REGISTRATION_OPEN') return 'Registration Closed'
+    return 'Register'
+  }
+
+  const getRegistrationButtonColor = () => {
+    if (isRegistered) return 'error' as const
+    return 'primary' as const
+  }
+
+  const getRegistrationButtonIcon = () => {
+    if (isRegistered) return <UnregisterIcon />
+    return <RegisterIcon />
   }
 
   if (loading && !hackathon) {
@@ -369,19 +675,21 @@ export default function PublicHackathonPage() {
               <Button
                 variant="outlined"
                 startIcon={!isSmall && <ShareIcon />}
+                endIcon={!isSmall && <ArrowDownIcon />}
                 size={isSmall ? "small" : "medium"}
-                onClick={handleShare}
+                onClick={handleShareMenuOpen}
               >
-                {isSmall ? 'Share' : 'Share'}
+                Share
               </Button>
               <Button
                 variant="contained"
-                startIcon={!isSmall && <RegisterIcon />}
+                color={getRegistrationButtonColor()}
+                startIcon={!isSmall && getRegistrationButtonIcon()}
                 size={isSmall ? "small" : "medium"}
-                onClick={handleRegister}
-                disabled={!canRegister()}
+                onClick={isRegistered ? handleUnregister : handleRegister}
+                disabled={(!canRegister() && !isRegistered) || registrationLoading || checkingRegistration}
               >
-                {isRegistered ? 'Registered' : canRegister() ? 'Register' : 'Registration Closed'}
+                {getRegistrationButtonText()}
               </Button>
             </Box>
           </Box>
@@ -635,6 +943,83 @@ export default function PublicHackathonPage() {
           userRole: user?.role || 'anonymous'
         }}
       />
+
+      {/* Share Menu */}
+      <Menu
+        anchorEl={shareMenuAnchor}
+        open={Boolean(shareMenuAnchor)}
+        onClose={handleShareMenuClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        {typeof window !== 'undefined' && 'share' in navigator && (
+          <MenuItem onClick={() => handleShare('native')}>
+            <ListItemIcon>
+              <ShareIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Share via...</ListItemText>
+          </MenuItem>
+        )}
+        <MenuItem onClick={() => handleShare('twitter')}>
+          <ListItemIcon>
+            <TwitterIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Share on Twitter</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleShare('facebook')}>
+          <ListItemIcon>
+            <FacebookIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Share on Facebook</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleShare('linkedin')}>
+          <ListItemIcon>
+            <LinkedInIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Share on LinkedIn</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleShare('whatsapp')}>
+          <ListItemIcon>
+            <WhatsAppIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Share on WhatsApp</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleShare('telegram')}>
+          <ListItemIcon>
+            <TelegramIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Share on Telegram</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleShare('reddit')}>
+          <ListItemIcon>
+            <RedditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Share on Reddit</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleShare('copy')}>
+          <ListItemIcon>
+            <CopyIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Copy Details</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
