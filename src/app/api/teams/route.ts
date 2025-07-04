@@ -254,11 +254,17 @@ export async function GET(request: NextRequest) {
       id: team.id,
       name: team.name,
       description: team.description,
+      //@ts-ignore
       hackathon_title: team.hackathons.title,
+      //@ts-ignore
       hackathon_id: team.hackathons.id,
+      //@ts-ignore
       leader_id: team.leader.id,
+      //@ts-ignore
       leader_name: team.leader.full_name,
+      //@ts-ignore
       leader_username: team.leader.username,
+      //@ts-ignore
       leader_avatar: team.leader.avatar_url,
       status: team.status,
       looking_for_members: team.looking_for_members,
@@ -267,6 +273,7 @@ export async function GET(request: NextRequest) {
       max_members: team.max_team_size || 5,
       min_members: team.min_team_size || 1,
       created_at: team.created_at,
+      //@ts-ignore
       hackathon_status: team.hackathons.status
     })) || []
 
