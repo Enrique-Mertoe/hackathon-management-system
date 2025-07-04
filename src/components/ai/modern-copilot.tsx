@@ -36,6 +36,7 @@ import {
   Info as InfoIcon
 } from '@mui/icons-material'
 import { getAIContextForPage, type AIPageContext } from '@/lib/ai-page-contexts'
+import { isTrustedUrl } from '@/lib/trusted-domains'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -71,6 +72,7 @@ export function ModernCopilot({
   const [pageContext, setPageContext] = useState<AIPageContext | null>(null)
   const [showStats, setShowStats] = useState(false)
   const [conversationStats, setConversationStats] = useState<any>(null)
+  const [linkDialog, setLinkDialog] = useState<{open: boolean, url: string, title?: string}>({open: false, url: '', title: ''})
 
   // Initialize page context
   useEffect(() => {
@@ -246,6 +248,44 @@ export function ModernCopilot({
 
   const theme = useTheme()
   
+  // Handle link clicks with confirmation dialog
+  const handleLinkClick = (url: string, title?: string) => {
+    // Check if it's an external link
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      const currentDomain = window.location.hostname
+      const linkDomain = new URL(url).hostname
+      
+      // If it's an external domain, check if it's trusted
+      if (linkDomain !== currentDomain) {
+        // Skip confirmation for trusted domains
+        if (isTrustedUrl(url)) {
+          window.open(url, '_blank', 'noopener,noreferrer')
+          return
+        }
+        
+        // Show confirmation dialog for untrusted external domains
+        setLinkDialog({
+          open: true,
+          url: url,
+          title: title || url
+        })
+        return
+      }
+    }
+    
+    // For internal links or relative paths, navigate directly
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleConfirmLink = () => {
+    window.open(linkDialog.url, '_blank', 'noopener,noreferrer')
+    setLinkDialog({open: false, url: '', title: ''})
+  }
+
+  const handleCancelLink = () => {
+    setLinkDialog({open: false, url: '', title: ''})
+  }
+  
   // Markdown components for styling with theme awareness
   const markdownComponents = {
     p: ({ children }: any) => (
@@ -394,6 +434,27 @@ export function ModernCopilot({
         border: '1px solid',
         borderColor: 'divider'
       }}>
+        {children}
+      </Box>
+    ),
+    a: ({ children, href }: any) => (
+      <Box 
+        component="span" 
+        onClick={(e) => {
+          e.preventDefault()
+          handleLinkClick(href, children?.toString())
+        }}
+        sx={{
+          color: 'primary.main',
+          textDecoration: 'underline',
+          cursor: 'pointer',
+          fontSize: 'inherit',
+          '&:hover': {
+            color: 'primary.dark',
+            textDecoration: 'underline'
+          }
+        }}
+      >
         {children}
       </Box>
     )
@@ -944,11 +1005,99 @@ export function ModernCopilot({
               variant="outlined" 
               color="error" 
               onClick={() => {
-                handleClearConversation()
+                void handleClearConversation()
                 setShowStats(false)
               }}
             >
               Clear History
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Link Confirmation Dialog */}
+        <Dialog
+          open={linkDialog.open}
+          onClose={handleCancelLink}
+          maxWidth="sm"
+          fullWidth
+          slotProps={{
+            paper: {
+              sx: {
+                bgcolor: theme.palette.mode === 'dark' 
+                  ? alpha(theme.palette.background.paper, 0.95)
+                  : 'background.paper',
+                backdropFilter: 'blur(10px)',
+                border: theme.palette.mode === 'dark' 
+                  ? `1px solid ${alpha(theme.palette.divider, 0.2)}` 
+                  : 'none'
+              }
+            }
+          }}
+        >
+          <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ 
+              bgcolor: alpha(theme.palette.warning.main, 0.1),
+              color: 'warning.main',
+              borderRadius: '50%',
+              width: 32,
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              ⚠️
+            </Box>
+            External Link Warning
+          </DialogTitle>
+          <DialogContent>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              You're about to visit an external website. Please make sure you trust this link before proceeding.
+            </Alert>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              <strong>Link destination:</strong>
+            </Typography>
+            <Box sx={{ 
+              p: 1.5, 
+              bgcolor: alpha(theme.palette.grey[500], 0.1),
+              borderRadius: 1,
+              border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
+              mb: 2
+            }}>
+              <Typography variant="body2" sx={{ 
+                wordBreak: 'break-all',
+                fontFamily: 'monospace',
+                fontSize: '0.85rem'
+              }}>
+                {linkDialog.url}
+              </Typography>
+            </Box>
+            {linkDialog.title && linkDialog.title !== linkDialog.url && (
+              <>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  <strong>Link text:</strong>
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  "{linkDialog.title}"
+                </Typography>
+              </>
+            )}
+            <Typography variant="caption" color="text.secondary">
+              💡 <strong>Safety tip:</strong> Only click "Continue" if you recognize and trust this website. 
+              Well-known developer sites like GitHub, Stack Overflow, and major documentation sites are automatically trusted and won't show this warning. 
+              HackHub AI is not responsible for the content of external websites.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCancelLink} color="inherit">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmLink} 
+              variant="contained" 
+              color="primary"
+              sx={{ ml: 1 }}
+            >
+              Continue to Link
             </Button>
           </DialogActions>
         </Dialog>
