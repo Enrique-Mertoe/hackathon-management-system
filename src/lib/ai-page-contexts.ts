@@ -327,6 +327,10 @@ export const getAIContextForPage = (
       return getHackathonBrowseContext(data.hackathons || [], data.filters || {})
     
     default:
+      // Handle hackathon detail pages with dynamic IDs
+      if (page.startsWith('hackathon-')) {
+        return getHackathonDetailContext(data.hackathon || {}, data)
+      }
       return {
         page: 'general',
         mode: 'general',

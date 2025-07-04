@@ -77,7 +77,6 @@ export default function PublicHackathonPage() {
   
   const [user, setUser] = useState<AuthUser | null>(null)
   const [copilotOpen, setCopilotOpen] = useState(false)
-  const [analysisMode, setAnalysisMode] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
 
   // Use page cache for hackathon data
@@ -124,7 +123,6 @@ export default function PublicHackathonPage() {
   }, [])
 
   const handleAnalyzeWithAI = () => {
-    setAnalysisMode(true)
     setCopilotOpen(true)
   }
 
@@ -626,7 +624,6 @@ export default function PublicHackathonPage() {
         isOpen={copilotOpen}
         onClose={() => {
           setCopilotOpen(false)
-          setAnalysisMode(false)
         }}
         currentUser={user}
         page={`hackathon-${params.id}`}
