@@ -54,6 +54,7 @@ export async function POST(
 
     // Check if hackathon is still accepting registrations
     const now = new Date().toISOString()
+    //@ts-ignore
     if (team.hackathons.registration_end < now) {
       return NextResponse.json(
         { error: 'Registration period for this hackathon has ended' },

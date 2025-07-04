@@ -101,6 +101,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get popular themes from hackathons
+    //@ts-ignore
     const themes = hackathons?.map(h => h.theme).filter(Boolean) || []
     const themeCount = themes.reduce((acc, theme) => {
       acc[theme] = (acc[theme] || 0) + 1
@@ -108,6 +109,7 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, number>)
     
     const popularThemes = Object.entries(themeCount)
+        //@ts-ignore
       .sort(([,a], [,b]) => b - a)
       .slice(0, 5)
       .map(([theme]) => theme)

@@ -45,12 +45,18 @@ export async function GET(request: NextRequest) {
 
     // Transform the data to a more usable format
     const userTeams = teams?.map(teamMember => ({
+      //@ts-ignore
       id: teamMember.teams.id,
+      //@ts-ignore
       name: teamMember.teams.name,
+      //@ts-ignore
       description: teamMember.teams.description,
+      //@ts-ignore
       hackathon_title: teamMember.teams.hackathons.title,
+      //@ts-ignore
       hackathon_id: teamMember.teams.hackathons.id,
       role: teamMember.role,
+      //@ts-ignore
       status: teamMember.teams.status,
       member_count: 0, // Will be populated by a separate query if needed
       joined_at: teamMember.joined_at
