@@ -39,8 +39,7 @@ import {
   PlayArrow as LaunchIcon
 } from '@mui/icons-material'
 import type { AuthUser } from '@/lib/auth'
-import { CopilotSidepanel } from '@/components/ai/copilot-sidepanel'
-import type { FormSuggestion } from '@/components/ai/copilot-sidepanel'
+import { ModernCopilot } from '@/components/ai/modern-copilot'
 
 interface Hackathon {
   id: string
@@ -72,7 +71,6 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
   const [recentHackathons, setRecentHackathons] = useState<Hackathon[]>([])
   const [loading, setLoading] = useState(true)
   const [copilotOpen, setCopilotOpen] = useState(false)
-  const [organizerInsightsMode, setOrganizerInsightsMode] = useState(false)
 
   useEffect(() => {
     fetchDashboardData()
@@ -103,14 +101,7 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
   }
 
   const handleGetOrganizerInsights = () => {
-    setOrganizerInsightsMode(true)
     setCopilotOpen(true)
-  }
-
-  const handleApplySuggestions = (suggestions: FormSuggestion[]) => {
-    // For organizer insights, we might not need to apply suggestions
-    // But we can log them for future use
-    console.log('Organizer insights received:', suggestions)
   }
 
   const formatCurrency = (amount: number) => {
@@ -121,13 +112,6 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
     }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -539,17 +523,19 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
         </Grid>
       </Grid>
 
-      {/* AI Copilot Sidepanel */}
-      <CopilotSidepanel
+      {/* AI Copilot */}
+      <ModernCopilot
         isOpen={copilotOpen}
         onClose={() => {
           setCopilotOpen(false)
-          setOrganizerInsightsMode(false)
         }}
         currentUser={user}
-        onApplySuggestions={handleApplySuggestions}
-        formContext={{ user, stats, recentHackathons }}
-        organizerInsightsMode={organizerInsightsMode}
+        page="organizer-dashboard"
+        data={{
+          hackathons: recentHackathons,
+          stats,
+          user
+        }}
       />
     </Container>
   )
