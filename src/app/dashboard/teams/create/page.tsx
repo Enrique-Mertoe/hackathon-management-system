@@ -26,9 +26,7 @@ import {
 } from '@mui/material'
 import {
   ArrowBack as BackIcon,
-  Group as TeamIcon,
-  Add as AddIcon,
-  Delete as DeleteIcon
+  Group as TeamIcon
 } from '@mui/icons-material'
 import { auth } from '@/lib/auth'
 
@@ -52,11 +50,72 @@ interface TeamFormData {
 }
 
 const COMMON_SKILLS = [
-  'React', 'Next.js', 'TypeScript', 'JavaScript', 'Python', 'Node.js',
-  'UI/UX Design', 'Figma', 'Mobile Development', 'iOS', 'Android',
-  'Backend Development', 'API Design', 'Database Design', 'DevOps',
-  'Machine Learning', 'AI', 'Data Science', 'Blockchain', 'Web3',
-  'Product Management', 'Marketing', 'Business Development'
+  { title: 'React', category: 'Frontend' },
+  { title: 'Next.js', category: 'Frontend' },
+  { title: 'TypeScript', category: 'Frontend' },
+  { title: 'JavaScript', category: 'Frontend' },
+  { title: 'Vue.js', category: 'Frontend' },
+  { title: 'Angular', category: 'Frontend' },
+  { title: 'HTML/CSS', category: 'Frontend' },
+  { title: 'Tailwind CSS', category: 'Frontend' },
+  { title: 'Python', category: 'Backend' },
+  { title: 'Node.js', category: 'Backend' },
+  { title: 'Java', category: 'Backend' },
+  { title: 'C#', category: 'Backend' },
+  { title: 'Go', category: 'Backend' },
+  { title: 'Rust', category: 'Backend' },
+  { title: 'PHP', category: 'Backend' },
+  { title: 'Ruby', category: 'Backend' },
+  { title: 'UI/UX Design', category: 'Design' },
+  { title: 'Figma', category: 'Design' },
+  { title: 'Adobe Creative Suite', category: 'Design' },
+  { title: 'Sketch', category: 'Design' },
+  { title: 'Prototyping', category: 'Design' },
+  { title: 'Mobile Development', category: 'Mobile' },
+  { title: 'iOS', category: 'Mobile' },
+  { title: 'Android', category: 'Mobile' },
+  { title: 'React Native', category: 'Mobile' },
+  { title: 'Flutter', category: 'Mobile' },
+  { title: 'Swift', category: 'Mobile' },
+  { title: 'Kotlin', category: 'Mobile' },
+  { title: 'Backend Development', category: 'Backend' },
+  { title: 'API Design', category: 'Backend' },
+  { title: 'Database Design', category: 'Backend' },
+  { title: 'PostgreSQL', category: 'Backend' },
+  { title: 'MongoDB', category: 'Backend' },
+  { title: 'Redis', category: 'Backend' },
+  { title: 'DevOps', category: 'Infrastructure' },
+  { title: 'Docker', category: 'Infrastructure' },
+  { title: 'Kubernetes', category: 'Infrastructure' },
+  { title: 'AWS', category: 'Infrastructure' },
+  { title: 'Google Cloud', category: 'Infrastructure' },
+  { title: 'Azure', category: 'Infrastructure' },
+  { title: 'CI/CD', category: 'Infrastructure' },
+  { title: 'Machine Learning', category: 'AI/ML' },
+  { title: 'AI', category: 'AI/ML' },
+  { title: 'Data Science', category: 'AI/ML' },
+  { title: 'Deep Learning', category: 'AI/ML' },
+  { title: 'TensorFlow', category: 'AI/ML' },
+  { title: 'PyTorch', category: 'AI/ML' },
+  { title: 'Computer Vision', category: 'AI/ML' },
+  { title: 'NLP', category: 'AI/ML' },
+  { title: 'Blockchain', category: 'Web3' },
+  { title: 'Web3', category: 'Web3' },
+  { title: 'Solidity', category: 'Web3' },
+  { title: 'Ethereum', category: 'Web3' },
+  { title: 'Smart Contracts', category: 'Web3' },
+  { title: 'DeFi', category: 'Web3' },
+  { title: 'Product Management', category: 'Business' },
+  { title: 'Marketing', category: 'Business' },
+  { title: 'Business Development', category: 'Business' },
+  { title: 'Project Management', category: 'Business' },
+  { title: 'Sales', category: 'Business' },
+  { title: 'Content Writing', category: 'Business' },
+  { title: 'Data Analysis', category: 'Analytics' },
+  { title: 'Business Intelligence', category: 'Analytics' },
+  { title: 'Excel/Sheets', category: 'Analytics' },
+  { title: 'Tableau', category: 'Analytics' },
+  { title: 'Power BI', category: 'Analytics' }
 ]
 
 export default function CreateTeamPage() {
@@ -67,7 +126,9 @@ export default function CreateTeamPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [skillInput, setSkillInput] = useState('')
+  const [hackathonSelectOpen, setHackathonSelectOpen] = useState(false)
+  const [hackathonLoading, setHackathonLoading] = useState(false)
+  const [selectedHackathon, setSelectedHackathon] = useState<Hackathon | null>(null)
   
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
@@ -83,6 +144,14 @@ export default function CreateTeamPage() {
     fetchAvailableHackathons()
   }, [])
 
+  // Update selected hackathon when formData.hackathon_id changes
+  useEffect(() => {
+    if (formData.hackathon_id && hackathons.length > 0) {
+      const hackathon = hackathons.find(h => h.id === formData.hackathon_id)
+      setSelectedHackathon(hackathon || null)
+    }
+  }, [formData.hackathon_id, hackathons])
+
   const fetchAvailableHackathons = async () => {
     try {
       const user = await auth.getCurrentUser()
@@ -92,7 +161,7 @@ export default function CreateTeamPage() {
       }
 
       // Fetch hackathons that are accepting registrations
-      const response = await fetch('/api/hackathons?status=REGISTRATION_OPEN')
+      const response = await fetch('/api/hackathons?status=PUBLISHED')
       if (response.ok) {
         const data = await response.json()
         setHackathons(data.hackathons || [])
@@ -105,6 +174,20 @@ export default function CreateTeamPage() {
     }
   }
 
+  const handleHackathonSelectOpen = () => {
+    setHackathonSelectOpen(true)
+    if (hackathons.length === 0) {
+      setHackathonLoading(true)
+      fetchAvailableHackathons().finally(() => {
+        setHackathonLoading(false)
+      })
+    }
+  }
+
+  const handleHackathonSelectClose = () => {
+    setHackathonSelectOpen(false)
+  }
+
   const handleInputChange = (field: keyof TeamFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -112,22 +195,6 @@ export default function CreateTeamPage() {
     }))
   }
 
-  const handleAddSkill = () => {
-    if (skillInput.trim() && !formData.skills_wanted.includes(skillInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        skills_wanted: [...prev.skills_wanted, skillInput.trim()]
-      }))
-      setSkillInput('')
-    }
-  }
-
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      skills_wanted: prev.skills_wanted.filter(skill => skill !== skillToRemove)
-    }))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -226,30 +293,67 @@ export default function CreateTeamPage() {
               />
 
               {/* Hackathon Selection */}
-              <FormControl fullWidth required>
-                <InputLabel>Select Hackathon</InputLabel>
-                <Select
-                  value={formData.hackathon_id}
-                  label="Select Hackathon"
-                  onChange={(e) => handleInputChange('hackathon_id', e.target.value)}
-                  sx={{
-                    borderRadius: 2
-                  }}
-                >
-                  {hackathons.map((hackathon) => (
-                    <MenuItem key={hackathon.id} value={hackathon.id}>
-                      <Box>
-                        <Typography variant="body1">
-                          {hackathon.title}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Starts {new Date(hackathon.start_date).toLocaleDateString()}
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                fullWidth
+                open={hackathonSelectOpen}
+                onOpen={handleHackathonSelectOpen}
+                onClose={handleHackathonSelectClose}
+                options={hackathons}
+                loading={hackathonLoading}
+                value={selectedHackathon}
+                onChange={(_, newValue) => {
+                  setSelectedHackathon(newValue)
+                  handleInputChange('hackathon_id', newValue?.id || '')
+                }}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                getOptionLabel={(option) => option.title}
+                noOptionsText={
+                  hackathonLoading ? "Loading hackathons..." : 
+                  "No hackathons available for registration"
+                }
+                renderOption={(props, option) => (
+                  <Box component="li" {...props}>
+                    <Box>
+                      <Typography variant="body1">
+                        {option.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Starts {new Date(option.start_date).toLocaleDateString()} • 
+                        Ends {new Date(option.end_date).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Hackathon *"
+                    placeholder="Choose a hackathon to create a team for"
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <React.Fragment>
+                          {hackathonLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </React.Fragment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2
+                      }
+                    }}
+                  />
+                )}
+                sx={{
+                  '& .MuiAutocomplete-popper': {
+                    '& .MuiPaper-root': {
+                      borderRadius: 2,
+                      boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px'
+                    }
+                  }
+                }}
+              />
 
               {/* Team Description */}
               <TextField
@@ -275,7 +379,7 @@ export default function CreateTeamPage() {
                     type="number"
                     value={formData.min_team_size}
                     onChange={(e) => handleInputChange('min_team_size', parseInt(e.target.value) || 1)}
-                    inputProps={{ min: 1, max: 10 }}
+                    slotProps={{ htmlInput: { min: 1, max: 10 } }}
                     fullWidth
                     sx={{
                       '& .MuiOutlinedInput-root': {
@@ -290,7 +394,7 @@ export default function CreateTeamPage() {
                     type="number"
                     value={formData.max_team_size}
                     onChange={(e) => handleInputChange('max_team_size', parseInt(e.target.value) || 5)}
-                    inputProps={{ min: 1, max: 10 }}
+                    slotProps={{ htmlInput: { min: 1, max: 10 } }}
                     fullWidth
                     sx={{
                       '& .MuiOutlinedInput-root': {
@@ -307,45 +411,25 @@ export default function CreateTeamPage() {
                   Skills Looking For
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Add skills you're looking for in potential team members
+                  Select skills you're looking for in potential team members
                 </Typography>
                 
                 <Autocomplete
-                  freeSolo
+                  multiple
+                  limitTags={3}
                   options={COMMON_SKILLS}
-                  value={skillInput}
+                  groupBy={(option) => option.category}
+                  getOptionLabel={(option) => option.title}
+                  value={COMMON_SKILLS.filter(skill => formData.skills_wanted.includes(skill.title))}
                   onChange={(_, newValue) => {
-                    if (typeof newValue === 'string') {
-                      setSkillInput(newValue)
-                    }
-                  }}
-                  onInputChange={(_, newInputValue) => {
-                    setSkillInput(newInputValue)
+                    const skillTitles = newValue.map(skill => skill.title)
+                    handleInputChange('skills_wanted', skillTitles)
                   }}
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Add Skill"
-                      placeholder="Type a skill and press Enter"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          handleAddSkill()
-                        }
-                      }}
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <Button
-                            size="small"
-                            onClick={handleAddSkill}
-                            disabled={!skillInput.trim()}
-                            sx={{ mr: 1 }}
-                          >
-                            Add
-                          </Button>
-                        )
-                      }}
+                      label="Select Skills"
+                      placeholder="Choose skills you're looking for..."
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: 2
@@ -353,36 +437,33 @@ export default function CreateTeamPage() {
                       }}
                     />
                   )}
+                  renderTags={(tagValue, getTagProps) =>
+                    tagValue.map((option, index) => (
+                      <Chip
+                        label={option.title}
+                        {...getTagProps({ index })}
+                        key={option.title}
+                        color="primary"
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                          borderRadius: 1,
+                          '& .MuiChip-deleteIcon': {
+                            fontSize: 16
+                          }
+                        }}
+                      />
+                    ))
+                  }
+                  sx={{
+                    '& .MuiAutocomplete-popper': {
+                      '& .MuiPaper-root': {
+                        borderRadius: 2,
+                        boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px'
+                      }
+                    }
+                  }}
                 />
-
-                {formData.skills_wanted.length > 0 && (
-                  <Paper 
-                    variant="outlined" 
-                    sx={{ 
-                      p: 2, 
-                      mt: 2, 
-                      borderRadius: 2,
-                      backgroundColor: alpha(theme.palette.primary.main, 0.02)
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Skills Added:
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {formData.skills_wanted.map((skill, index) => (
-                        <Chip
-                          key={index}
-                          label={skill}
-                          onDelete={() => handleRemoveSkill(skill)}
-                          color="primary"
-                          variant="outlined"
-                          size="small"
-                          deleteIcon={<DeleteIcon />}
-                        />
-                      ))}
-                    </Box>
-                  </Paper>
-                )}
               </Box>
 
               {/* Looking for Members Toggle */}
