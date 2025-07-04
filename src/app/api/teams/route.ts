@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import {supabase} from "@/lib/supabase.server";
 import { auth } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
+
+    const sb = await supabase()
     // Get current user
-    const { user, error: authError } = await auth.getSession()
+    const { user, error: authError } = await auth.getSession(sb)
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if hackathon exists and is accepting registrations
-    const { data: hackathon, error: hackathonError } = await supabase
+    const { data: hackathon, error: hackathonError } = await sb
       .from('hackathons')
       .select('id, title, status, registration_end')
       .eq('id', teamData.hackathon_id)
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is already part of a team for this hackathon
-    const { data: existingTeamMembership } = await supabase
+    const { data: existingTeamMembership } = await sb
       .from('team_members')
       .select(`
         teams!inner(
@@ -83,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is registered for the hackathon
-    const { data: registration } = await supabase
+    const { data: registration } = await sb
       .from('hackathon_registrations')
       .select('id')
       .eq('hackathon_id', teamData.hackathon_id)
@@ -98,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the team
-    const { data: team, error: teamError } = await supabase
+    const { data: team, error: teamError } = await sb
       .from('teams')
       .insert({
         name: teamData.name,
@@ -124,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Add the creator as the team leader
-    const { error: memberError } = await supabase
+    const { error: memberError } = await sb
       .from('team_members')
       .insert({
         team_id: team.id,
@@ -136,7 +138,7 @@ export async function POST(request: NextRequest) {
     if (memberError) {
       console.error('Error adding team leader:', memberError)
       // Clean up the team if adding the leader fails
-      await supabase.from('teams').delete().eq('id', team.id)
+      await sb.from('teams').delete().eq('id', team.id)
       return NextResponse.json(
         { error: 'Failed to create team membership' },
         { status: 500 }
@@ -144,7 +146,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update hackathon registration to include team_id
-    await supabase
+    await sb
       .from('hackathon_registrations')
       .update({ team_id: team.id })
       .eq('hackathon_id', teamData.hackathon_id)
@@ -177,7 +179,8 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Get current user
-    const { user, error: authError } = await auth.getSession()
+    const sb = await supabase()
+    const { user, error: authError } = await auth.getSession(sb)
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -191,7 +194,7 @@ export async function GET(request: NextRequest) {
     const hackathon_id = url.searchParams.get('hackathon_id')
 
     // Build query for teams
-    let query = supabase
+    let query = sb
       .from('teams')
       .select(`
         id,
@@ -238,7 +241,7 @@ export async function GET(request: NextRequest) {
     let memberCounts: Record<string, number> = {}
 
     if (teamIds.length > 0) {
-      const { data: memberCountData } = await supabase
+      const { data: memberCountData } = await sb
         .from('team_members')
         .select('team_id')
         .in('team_id', teamIds)
