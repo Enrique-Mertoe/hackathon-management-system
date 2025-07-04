@@ -10,6 +10,7 @@ export const auth = {
   async signUp(email: string, password: string, userData: {
     username: string
     full_name: string
+
     role?: 'PARTICIPANT' | 'ORGANIZER' | 'MENTOR' | 'JUDGE' | 'ADMIN'
   }) {
     const { data, error } = await supabase.auth.signUp({
