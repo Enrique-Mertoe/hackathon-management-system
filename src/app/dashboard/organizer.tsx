@@ -178,9 +178,11 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
       {/* Quick Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+          <Card className={"!relative"} sx={{ boxShadow: 2, borderRadius: 2 }}>
             <CardContent sx={{ p: 1, textAlign: 'center' }}>
-              <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48, mx: 'auto', mb: 1 }}>
+              <Avatar
+                  className={"!absolute !m-2 top-0 end-0"}
+                  sx={{ bgcolor: 'primary.main', width: 48, height: 48, mx: 'auto', mb: 1 }}>
                 <EventIcon />
               </Avatar>
               <Typography variant="h4" fontWeight="bold" color="primary.main">
@@ -194,9 +196,11 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+          <Card className={"!relative"} sx={{ boxShadow: 2, borderRadius: 2 }}>
             <CardContent sx={{ p: 1, textAlign: 'center' }}>
-              <Avatar sx={{ bgcolor: 'success.main', width: 48, height: 48, mx: 'auto', mb: 1 }}>
+              <Avatar
+                  className={"!absolute !m-2 top-0 end-0"}
+                  sx={{ bgcolor: 'success.main', width: 48, height: 48, mx: 'auto', mb: 1 }}>
                 <GroupIcon />
               </Avatar>
               <Typography variant="h4" fontWeight="bold" color="success.main">
@@ -210,9 +214,9 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+          <Card className={"!relative"} sx={{ boxShadow: 2, borderRadius: 2 }}>
             <CardContent sx={{ p: 1, textAlign: 'center' }}>
-              <Avatar sx={{ bgcolor: 'warning.main', width: 48, height: 48, mx: 'auto', mb: 1 }}>
+              <Avatar  className={"!absolute !m-2 top-0 end-0"} sx={{ bgcolor: 'warning.main', width: 48, height: 48, mx: 'auto', mb: 1 }}>
                 <TrophyIcon />
               </Avatar>
               <Typography variant="h4" fontWeight="bold" color="warning.main">
@@ -226,9 +230,9 @@ export default function OrganizerDashboard({ user }: OrganizerDashboardProps) {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+          <Card className={"!relative"} sx={{ boxShadow: 2, borderRadius: 2 }}>
             <CardContent sx={{ p: 1, textAlign: 'center' }}>
-              <Avatar sx={{ bgcolor: 'info.main', width: 48, height: 48, mx: 'auto', mb:1 }}>
+              <Avatar  className={"!absolute !m-2 top-0 end-0"} sx={{ bgcolor: 'info.main', width: 48, height: 48, mx: 'auto', mb:1 }}>
                 <LaunchIcon />
               </Avatar>
               <Typography variant="h4" fontWeight="bold" color="info.main">
