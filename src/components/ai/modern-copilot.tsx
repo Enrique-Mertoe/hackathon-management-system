@@ -19,7 +19,9 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  useTheme,
+  alpha
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -29,7 +31,6 @@ import {
   Login as LoginIcon,
   PersonAdd as SignupIcon,
   Analytics as AnalyticsIcon,
-  TrendingUp as TrendingUpIcon,
   Assessment as InsightIcon,
   Clear as ClearIcon,
   Info as InfoIcon
@@ -243,7 +244,9 @@ export function ModernCopilot({
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
-  // Markdown components for styling
+  const theme = useTheme()
+  
+  // Markdown components for styling with theme awareness
   const markdownComponents = {
     p: ({ children }: any) => (
       <Typography variant="body2" component="div" sx={{ 
@@ -311,19 +314,22 @@ export function ModernCopilot({
     code: ({ children, inline }: any) => (
       inline ? (
         <Box component="code" sx={{ 
-          bgcolor: 'grey.100',
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+          color: theme.palette.mode === 'dark' ? 'primary.light' : 'primary.dark',
           px: 0.5,
           py: 0.25,
           borderRadius: 0.5,
           fontSize: '0.75rem',
-          fontFamily: 'monospace'
+          fontFamily: 'monospace',
+          border: `1px solid ${alpha(theme.palette.divider, 0.3)}`
         }}>
           {children}
         </Box>
       ) : (
         <Box component="pre" sx={{
-          bgcolor: 'grey.100',
-          p: 1,
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
+          border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+          p: 1.5,
           borderRadius: 1,
           fontSize: '0.75rem',
           fontFamily: 'monospace',
@@ -353,7 +359,9 @@ export function ModernCopilot({
       </Box>
     ),
     thead: ({ children }: any) => (
-      <Box component="thead" sx={{ bgcolor: 'grey.100' }}>
+      <Box component="thead" sx={{ 
+        bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+      }}>
         {children}
       </Box>
     ),
@@ -362,7 +370,9 @@ export function ModernCopilot({
     ),
     tr: ({ children }: any) => (
       <Box component="tr" sx={{ 
-        '&:nth-of-type(even)': { bgcolor: 'grey.50' }
+        '&:nth-of-type(even)': { 
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)'
+        }
       }}>
         {children}
       </Box>
@@ -399,7 +409,13 @@ export function ModernCopilot({
           📊 Data Analysis Results:
         </Typography>
         {dataResults.map((result, index) => (
-          <Card key={index} sx={{ bgcolor: 'grey.50', borderRadius: 2 }}>
+          <Card key={index} sx={{ 
+            bgcolor: theme.palette.mode === 'dark' 
+              ? alpha(theme.palette.background.paper, 0.6)
+              : alpha(theme.palette.primary.main, 0.04),
+            borderRadius: 2,
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+          }}>
             <CardContent sx={{ p: 1.5 }}>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                 {result.caption}
@@ -429,7 +445,13 @@ export function ModernCopilot({
         Get personalized hackathon insights, analytics, and recommendations from our AI assistant.
       </Typography>
       
-      <Card sx={{ mb: 3, bgcolor: 'grey.50' }}>
+      <Card sx={{ 
+        mb: 3, 
+        bgcolor: theme.palette.mode === 'dark' 
+          ? alpha(theme.palette.background.paper, 0.6)
+          : alpha(theme.palette.primary.main, 0.04),
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+      }}>
         <CardContent sx={{ p: 2 }}>
           <Typography variant="subtitle2" color="primary" fontWeight="600" gutterBottom>
             ✨ What you'll get:
@@ -499,7 +521,7 @@ export function ModernCopilot({
   return (
     <Slide direction="left" in={isOpen} mountOnEnter unmountOnExit>
       <Paper
-        elevation={6}
+        elevation={theme.palette.mode === 'dark' ? 12 : 6}
         sx={{
           position: 'fixed',
           top: 0,
@@ -513,7 +535,17 @@ export function ModernCopilot({
           borderBottomLeftRadius: 8,
           borderTopRightRadius: 0,
           borderBottomRightRadius: 0,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          bgcolor: theme.palette.mode === 'dark' 
+            ? alpha(theme.palette.background.paper, 0.95)
+            : 'background.paper',
+          backdropFilter: 'blur(10px)',
+          border: theme.palette.mode === 'dark' 
+            ? `1px solid ${alpha(theme.palette.divider, 0.2)}` 
+            : 'none',
+          boxShadow: theme.palette.mode === 'dark'
+            ? `0 8px 32px ${alpha(theme.palette.common.black, 0.5)}`
+            : `0 8px 32px ${alpha(theme.palette.common.black, 0.15)}`
         }}
       >
         {/* Header */}
@@ -583,7 +615,10 @@ export function ModernCopilot({
             p: currentUser ? 1.5 : 0,
             display: 'flex',
             flexDirection: 'column',
-            gap: 1.5
+            gap: 1.5,
+            bgcolor: theme.palette.mode === 'dark' 
+              ? alpha(theme.palette.background.default, 0.3)
+              : alpha(theme.palette.background.default, 0.5)
           }}
         >
           {!currentUser ? (
@@ -640,8 +675,20 @@ export function ModernCopilot({
                   maxWidth: '80%',
                   p: 2,
                   borderRadius: 3,
-                  bgcolor: message.type === 'user' ? 'primary.main' : 'grey.100',
-                  color: message.type === 'user' ? 'primary.contrastText' : 'text.primary'
+                  bgcolor: message.type === 'user' 
+                    ? 'primary.main' 
+                    : theme.palette.mode === 'dark' 
+                      ? alpha(theme.palette.background.paper, 0.8)
+                      : alpha(theme.palette.grey[100], 0.9),
+                  color: message.type === 'user' 
+                    ? 'primary.contrastText' 
+                    : 'text.primary',
+                  border: message.type === 'ai' 
+                    ? `1px solid ${alpha(theme.palette.divider, 0.2)}` 
+                    : 'none',
+                  boxShadow: message.type === 'ai' 
+                    ? `0 1px 3px ${alpha(theme.palette.common.black, 0.1)}` 
+                    : 'none'
                 }}
               >
                 <ReactMarkdown
@@ -683,13 +730,16 @@ export function ModernCopilot({
                 sx={{
                   p: 1.5,
                   borderRadius: 2,
-                  bgcolor: 'grey.100',
+                  bgcolor: theme.palette.mode === 'dark' 
+                    ? alpha(theme.palette.background.paper, 0.6)
+                    : alpha(theme.palette.grey[100], 0.9),
+                  border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1
                 }}
               >
-                <CircularProgress size={12} />
+                <CircularProgress size={12} color="primary" />
                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   Thinking...
                 </Typography>
@@ -703,15 +753,18 @@ export function ModernCopilot({
                 sx={{
                   p: 1.5,
                   borderRadius: 2,
-                  bgcolor: 'primary.light',
-                  color: 'primary.contrastText',
+                  bgcolor: theme.palette.mode === 'dark' 
+                    ? alpha(theme.palette.primary.main, 0.2)
+                    : alpha(theme.palette.primary.main, 0.1),
+                  color: 'primary.main',
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1
                 }}
               >
-                <CircularProgress size={12} color="inherit" />
-                <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                <CircularProgress size={12} color="primary" />
+                <Typography variant="caption" color="primary" sx={{ fontSize: '0.7rem', fontWeight: 'medium' }}>
                   📊 Executing data analysis...
                 </Typography>
               </Box>
@@ -723,20 +776,36 @@ export function ModernCopilot({
 
         {currentUser && (
           <>
-            <Divider />
+            <Divider sx={{ 
+              borderColor: alpha(theme.palette.divider, 0.1),
+              bgcolor: alpha(theme.palette.divider, 0.05) 
+            }} />
             {/* Input */}
-            <Box sx={{ p: 1.5 }}>
+            <Box sx={{ 
+              p: 1.5,
+              bgcolor: theme.palette.mode === 'dark' 
+                ? alpha(theme.palette.background.paper, 0.3)
+                : alpha(theme.palette.background.paper, 0.9)
+            }}>
               <Box sx={{ display: 'flex', gap: 0.5, mb: 1.5, flexWrap: 'wrap' }}>
                 {(pageContext?.prompts || []).slice(3, 6).map((prompt, index) => (
                   <Chip
                     key={index}
                     label={prompt.split(' ').slice(0, 2).join(' ') + '...'}
                     size="small"
+                    variant="outlined"
                     onClick={() => void handlePredefinedPrompt(prompt)}
                     sx={{ 
                       cursor: 'pointer',
                       fontSize: '0.65rem',
-                      height: 24
+                      height: 24,
+                      borderColor: alpha(theme.palette.primary.main, 0.3),
+                      color: 'primary.main',
+                      bgcolor: alpha(theme.palette.primary.main, 0.05),
+                      '&:hover': {
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        borderColor: alpha(theme.palette.primary.main, 0.5)
+                      }
                     }}
                   />
                 ))}
@@ -759,10 +828,23 @@ export function ModernCopilot({
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: '8px',
-                      fontSize: '0.8rem'
+                      fontSize: '0.8rem',
+                      bgcolor: theme.palette.mode === 'dark' 
+                        ? alpha(theme.palette.background.paper, 0.8)
+                        : 'background.paper',
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: alpha(theme.palette.primary.main, 0.5)
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                        borderWidth: 2
+                      }
                     },
                     '& .MuiOutlinedInput-input': {
                       py: 1
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: alpha(theme.palette.divider, 0.3)
                     }
                   }}
                 />
@@ -791,6 +873,17 @@ export function ModernCopilot({
           onClose={() => setShowStats(false)}
           maxWidth="sm"
           fullWidth
+          PaperProps={{
+            sx: {
+              bgcolor: theme.palette.mode === 'dark' 
+                ? alpha(theme.palette.background.paper, 0.95)
+                : 'background.paper',
+              backdropFilter: 'blur(10px)',
+              border: theme.palette.mode === 'dark' 
+                ? `1px solid ${alpha(theme.palette.divider, 0.2)}` 
+                : 'none'
+            }
+          }}
         >
           <DialogTitle>Conversation Statistics</DialogTitle>
           <DialogContent>
