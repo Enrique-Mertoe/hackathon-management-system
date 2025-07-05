@@ -10,6 +10,7 @@ import {useAppTheme} from '@/contexts/ThemeContext'
 import ProfileDropdown from "@/components/layout/navbar/profile";
 import FloatingSearch from "@/components/layout/navbar/search";
 import Image from "next/image";
+import {MenuIcon} from "lucide-react";
 
 interface NavbarProps {
     onMenuClick?: () => void
@@ -54,6 +55,23 @@ export const Navbar: React.FC<NavbarProps> = ({onMenuClick: _onMenuClick}) => {
         <AppBar position="fixed" sx={{ backgroundColor: theme.palette.background.paper, boxShadow: 1 }}>
             <Toolbar sx={{ maxWidth: '1280px', mx: 'auto', width: '100%', px: { xs: 2, sm: 3, lg: 4 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+
+                    <IconButton
+                        onClick={_onMenuClick}
+                        sx={{
+                            display: { xs: 'flex', md: 'none' },
+                            color: theme.palette.text.primary,
+                            mr: 2,
+                            '&:hover': {
+                                backgroundColor: theme.palette.background.default,
+                            },
+                            '&.Mui-expanded': {
+                                backgroundColor: theme.palette.background.default,
+                            },
+                        }}
+                    >
+                        <MenuIcon/>
+                    </IconButton>
                     <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
                         <Box sx={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Image src="/logo-favicon.ico" alt="HackHub Logo" width={32} height={32} />
