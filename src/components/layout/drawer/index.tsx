@@ -32,7 +32,8 @@ import {
   Business as BusinessIcon,
   Analytics as AnalyticsIcon,
   Gavel as GavelIcon,
-  MoreVert as MoreVertIcon
+  MoreVert as MoreVertIcon,
+  Schedule as ScheduleIcon
 } from '@mui/icons-material'
 
 interface DrawerProps {
@@ -92,6 +93,12 @@ export function Drawer({ isOpen, onClose }: DrawerProps) {
       name: 'Organize',
       href: '/dashboard/organize',
       icon: <BusinessIcon />,
+      requireRole: ['ORGANIZER', 'ADMIN']
+    },
+    {
+      name: 'Schedule',
+      href: '/dashboard/schedule',
+      icon: <ScheduleIcon />,
       requireRole: ['ORGANIZER', 'ADMIN']
     },
     {
@@ -340,7 +347,7 @@ export function Drawer({ isOpen, onClose }: DrawerProps) {
       {isMobile && (
         <MuiDrawer
           variant="temporary"
-          open={true}
+          open={isOpen}
           onClose={onClose}
           ModalProps={{
             keepMounted: true, // Better open performance on mobile
@@ -360,7 +367,7 @@ export function Drawer({ isOpen, onClose }: DrawerProps) {
       {!isMobile && (
         <MuiDrawer
           variant="permanent"
-          open
+          open={isOpen}
           sx={{
             '& .MuiDrawer-paper': {
               width: drawerWidth,
